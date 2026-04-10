@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cfft-bsde"
+version = "0.0.0"
+description = "Convolution-based FFT methods for BSDEs."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "UNLICENSED" }
+authors = [{ name = "qingp" }]
+dependencies = []
+
+[project.scripts]
+cfft-bsde = "cfft_bsde.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

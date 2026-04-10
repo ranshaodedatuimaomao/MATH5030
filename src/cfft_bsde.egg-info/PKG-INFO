@@ -1,3 +1,12 @@
+Metadata-Version: 2.4
+Name: cfft-bsde
+Version: 0.0.0
+Summary: Convolution-based FFT methods for BSDEs.
+Author: qingp
+License: UNLICENSED
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+
 # MATH5030
 MATH5030 @ columbia university MAFN 2026 spring
 
