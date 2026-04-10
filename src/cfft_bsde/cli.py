@@ -1,3 +1,6 @@
+from cfft_bsde import hello_word
+
+
 def show_menu() -> None:
     print("\n=== Simple Console App ===")
     print("1) Say hello")
@@ -6,10 +9,7 @@ def show_menu() -> None:
 
 
 def say_hello() -> None:
-    name = input("Enter your name: ").strip()
-    if not name:
-        name = "there"
-    print(f"Hello, {name}!")
+    print(hello_word())
 
 
 def add_two_numbers() -> None:

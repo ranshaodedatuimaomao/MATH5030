@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 src/cfft_bsde/__init__.py
+src/cfft_bsde/__main__.py
 src/cfft_bsde/cli.py
 src/cfft_bsde.egg-info/PKG-INFO
 src/cfft_bsde.egg-info/SOURCES.txt
