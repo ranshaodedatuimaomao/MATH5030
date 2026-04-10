@@ -51,6 +51,24 @@ python3 -m pip install -e .
 cfft-bsde
 ```
 
+## Standalone launcher script
+
+Use `run_standalone.py` if you want one command that installs the local package and then starts the console app.
+
+### Windows
+
+```powershell
+python run_standalone.py
+```
+
+### macOS
+
+```bash
+python3 run_standalone.py
+```
+
+The script runs `pip install -e .`, then imports and executes `cfft_bsde.cli.main()`.
+
 ### Notes
 
 - `requirements.txt` currently has no external packages, so installation is quick.
