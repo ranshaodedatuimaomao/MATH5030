@@ -1,41 +1,66 @@
-from cfft_bsde import hello_word
+"""CLI entry points mapping to each project section (placeholders)."""
+
+from __future__ import annotations
+
+import argparse
+from collections.abc import Callable, Sequence
 
 
-def show_menu() -> None:
-    print("\n=== Simple Console App ===")
-    print("1) Say hello")
-    print("2) Add two numbers")
-    print("3) Quit")
+def _cmd_validate(_args: argparse.Namespace) -> None:
+    from cfft_bsde.validation.reproduce import run_black_scholes_benchmarks
+
+    run_black_scholes_benchmarks()
 
 
-def say_hello() -> None:
-    print(hello_word())
+def _cmd_benchmark(_args: argparse.Namespace) -> None:
+    from cfft_bsde.benchmarks.accuracy_runtime import run_study as run_accuracy_runtime
+
+    run_accuracy_runtime()
 
 
-def add_two_numbers() -> None:
-    try:
-        first = float(input("First number: ").strip())
-        second = float(input("Second number: ").strip())
-    except ValueError:
-        print("Please enter valid numbers.")
-        return
+def _cmd_scaling(_args: argparse.Namespace) -> None:
+    from cfft_bsde.benchmarks.scaling import run_study as run_scaling
 
-    total = first + second
-    print(f"Result: {first} + {second} = {total}")
+    run_scaling()
 
 
-def main() -> None:
-    while True:
-        show_menu()
-        choice = input("Choose an option (1-3): ").strip()
+def _cmd_robustness(_args: argparse.Namespace) -> None:
+    from cfft_bsde.robustness.sweep import run_sweep
 
-        if choice == "1":
-            say_hello()
-        elif choice == "2":
-            add_two_numbers()
-        elif choice == "3":
-            print("Goodbye!")
-            break
-        else:
-            print("Invalid choice. Please select 1, 2, or 3.")
+    run_sweep()
 
+
+def _cmd_adaptive(_args: argparse.Namespace) -> None:
+    from cfft_bsde.adaptive.tuning import suggest_config
+
+    suggest_config()
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="cfft-bsde",
+        description="Convolution-FFT BSDE project (scaffold).",
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    sub.add_parser("validate", help="Literature reproduction / BS validation").set_defaults(
+        _run=_cmd_validate
+    )
+    sub.add_parser("benchmark", help="Accuracy vs runtime study").set_defaults(_run=_cmd_benchmark)
+    sub.add_parser("scaling", help="Grid / time-step scaling study").set_defaults(_run=_cmd_scaling)
+    sub.add_parser("robustness", help="Parameter robustness sweep").set_defaults(_run=_cmd_robustness)
+    sub.add_parser("adaptive", help="Adaptive parameter tuning (extension)").set_defaults(
+        _run=_cmd_adaptive
+    )
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> None:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    run: Callable[[argparse.Namespace], None] = args._run
+    run(args)
+
+
+if __name__ == "__main__":
+    main()
