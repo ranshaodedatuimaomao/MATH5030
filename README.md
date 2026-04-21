@@ -93,15 +93,24 @@ Use `run_standalone.py` if you want one command that installs the local package 
 
 ```powershell
 python run_standalone.py
+# benchmark one-point comparison
+python run_standalone.py --mode benchmark-point
+# benchmark full-surface export
+python run_standalone.py --mode benchmark-surface
 ```
 
 ### macOS
 
 ```bash
 python3 run_standalone.py
+# benchmark one-point comparison
+python3 run_standalone.py --mode benchmark-point
+# benchmark full-surface export
+python3 run_standalone.py --mode benchmark-surface
 ```
 
 The script runs `pip install -e .`, then imports and executes `cfft_bsde.cli.main()`.
+Use `--extra-cli-args` to append any additional CLI flags.
 
 ### Notes
 
