@@ -66,6 +66,14 @@ class FourierMultipliers:
     psi_z: list[complex]
 
 
+@dataclass(frozen=True)
+class RecoveryTerms:
+    """Recovery terms induced by exponential shifting h(x)=A exp(x)+B."""
+
+    y_term: list[float]
+    z_term: list[float]
+
+
 def build_grids(config: CoreConfig, *, x_center: float) -> CoreGrids:
     """Build uniform time, space, and frequency grids used by the solver."""
 
@@ -137,3 +145,27 @@ def build_multipliers(
         psi_y.append(psi_shift)
         psi_z.append(sigma * (1j * vj - alpha) * psi_shift)
     return FourierMultipliers(psi_y=psi_y, psi_z=psi_z)
+
+
+def build_recovery_terms(
+    grids: CoreGrids,
+    *,
+    eta: float,
+    sigma: float,
+) -> RecoveryTerms:
+    """Precompute Y/Z recovery vectors from the characteristic function."""
+
+    psi_neg_i = _psi(-1j, dt=grids.dt, eta=eta, sigma=sigma)
+    psi_prime_neg_i = _psi_prime(-1j, dt=grids.dt, eta=eta, sigma=sigma)
+    y_term: list[float] = []
+    z_term: list[float] = []
+    for xi in grids.x:
+        exp_x = cmath.exp(xi).real
+        y_term.append((exp_x * psi_neg_i).real)
+        z_term.append(
+            (
+                (-eta * grids.dt * exp_x * psi_neg_i)
+                + ((1j * exp_x * psi_prime_neg_i) / (sigma * grids.dt))
+            ).real
+        )
+    return RecoveryTerms(y_term=y_term, z_term=z_term)
