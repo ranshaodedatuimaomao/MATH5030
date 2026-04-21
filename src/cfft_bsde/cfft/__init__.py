@@ -1,5 +1,5 @@
-"""Convolution–FFT discretization for BSDEs (literature-aligned core)."""
+"""Convolution-FFT core algorithm exports."""
 
-from . import core_algorithm, gh2025, ho2017
+from .core_algorithm import CoreConfig, CoreInputs, CoreSolution, solve_core
 
-__all__ = ["ho2017", "gh2025", "core_algorithm"]
+__all__ = ["CoreConfig", "CoreInputs", "CoreSolution", "solve_core"]
