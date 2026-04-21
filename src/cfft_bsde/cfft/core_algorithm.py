@@ -43,31 +43,3 @@ class CoreInputs:
     sigma: Callable[[float, float], float]
     driver: DriverFunc
     terminal_condition: RealFunc
-
-
-@dataclass(frozen=True)
-class CoreGrids:
-    """Discretization grids and mesh sizes."""
-
-    t: list[float]
-    x: list[float]
-    v: list[float]
-    dt: float
-    dx: float
-    dv: float
-
-
-def build_grids(config: CoreConfig, *, x_center: float) -> CoreGrids:
-    """Build uniform time, space, and frequency grids used by the solver."""
-
-    config.validate()
-    dt = config.maturity / float(config.n_time_steps)
-    dx = config.truncation_length / float(config.n_space_points)
-    dv = 2.0 * 3.141592653589793 / config.truncation_length
-
-    t = [k * dt for k in range(config.n_time_steps + 1)]
-    x0 = x_center - 0.5 * config.truncation_length
-    x = [x0 + i * dx for i in range(config.n_space_points)]
-    n_half = config.n_space_points / 2.0
-    v = [(j - n_half) * dv for j in range(config.n_space_points)]
-    return CoreGrids(t=t, x=x, v=v, dt=dt, dx=dx, dv=dv)
