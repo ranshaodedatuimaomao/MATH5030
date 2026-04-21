@@ -18,6 +18,11 @@ Brief implementation flow:
 Main implementation: `src/cfft_bsde/cfft/core_algorithm.py`  
 Console entrypoint: `src/cfft_bsde/cli.py`
 
+Method variants exposed by CLI:
+
+- `boundary_control` (default): fixed damping + time-dependent exponential shift.
+- `old_2017`: legacy-style path with adaptive damping heuristic + linear shift.
+
 ## Simple Python Console App
 
 ### Windows

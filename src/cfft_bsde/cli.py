@@ -35,6 +35,7 @@ def _run_core(args: argparse.Namespace) -> None:
         inputs=inputs,
         x_center=math.log(spot),
         enforce_positivity=args.enforce_positivity,
+        method=args.method,
     )
     x0 = math.log(spot)
     idx = min(range(len(solution.x)), key=lambda i: abs(solution.x[i] - x0))
@@ -61,6 +62,12 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--n-space-points", type=int, default=128, help="Number of spatial points")
     parser.add_argument("--truncation-length", type=float, default=12.0, help="Spatial truncation length")
     parser.add_argument("--alpha", type=float, default=-1.5, help="Damping alpha (<0)")
+    parser.add_argument(
+        "--method",
+        choices=["boundary_control", "old_2017"],
+        default="boundary_control",
+        help="Numerical method variant to run",
+    )
     parser.add_argument(
         "--enforce-positivity",
         action="store_true",
