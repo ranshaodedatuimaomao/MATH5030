@@ -74,6 +74,14 @@ class RecoveryTerms:
     z_term: list[float]
 
 
+@dataclass(frozen=True)
+class ShiftParams:
+    """Exponential shift parameters h(x)=A exp(x)+B."""
+
+    a: float
+    b: float
+
+
 def build_grids(config: CoreConfig, *, x_center: float) -> CoreGrids:
     """Build uniform time, space, and frequency grids used by the solver."""
 
@@ -169,3 +177,41 @@ def build_recovery_terms(
             ).real
         )
     return RecoveryTerms(y_term=y_term, z_term=z_term)
+
+
+def _one_sided_boundary_slopes(y: list[float], dx: float) -> tuple[float, float]:
+    left = (-3.0 * y[0] + 4.0 * y[1] - y[2]) / (2.0 * dx)
+    right = (3.0 * y[-1] - 4.0 * y[-2] + y[-3]) / (2.0 * dx)
+    return left, right
+
+
+def solve_shift_params(x: list[float], y: list[float], *, alpha: float, dx: float) -> ShiftParams:
+    """Solve A,B from periodicity constraints on damped-shifted value and slope."""
+
+    x_left = x[0]
+    x_right = x[-1]
+    y_left = y[0]
+    y_right = y[-1]
+    yprime_left, yprime_right = _one_sided_boundary_slopes(y, dx)
+
+    exp_left = cmath.exp(x_left).real
+    exp_right = cmath.exp(x_right).real
+    damp_left = cmath.exp(alpha * x_left).real
+    damp_right = cmath.exp(alpha * x_right).real
+
+    # Equation (value): e^{ax0}(Y0 - A e^{x0} - B) = e^{axN}(YN - A e^{xN} - B)
+    c1 = damp_left * exp_left - damp_right * exp_right
+    d1 = damp_left - damp_right
+    r1 = damp_left * y_left - damp_right * y_right
+
+    # Equation (slope): match first derivative of transformed function at boundaries.
+    c2 = damp_left * (alpha * exp_left + exp_left) - damp_right * (alpha * exp_right + exp_right)
+    d2 = alpha * (damp_left - damp_right)
+    r2 = damp_left * (alpha * y_left + yprime_left) - damp_right * (alpha * y_right + yprime_right)
+
+    det = c1 * d2 - c2 * d1
+    if abs(det) < 1e-14:
+        return ShiftParams(a=0.0, b=0.0)
+    a_val = (r1 * d2 - r2 * d1) / det
+    b_val = (c1 * r2 - c2 * r1) / det
+    return ShiftParams(a=a_val, b=b_val)
