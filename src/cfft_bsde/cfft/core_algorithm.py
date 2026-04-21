@@ -58,6 +58,14 @@ class CoreGrids:
     dv: float
 
 
+@dataclass(frozen=True)
+class FourierMultipliers:
+    """Frequency-domain multipliers for Y and Z convolution updates."""
+
+    psi_y: list[complex]
+    psi_z: list[complex]
+
+
 def build_grids(config: CoreConfig, *, x_center: float) -> CoreGrids:
     """Build uniform time, space, and frequency grids used by the solver."""
 
@@ -101,3 +109,31 @@ def centered_idft(values: list[complex], x: list[float], v: list[float]) -> list
             acc += values[k] * cmath.exp(1j * vk * xn)
         recovered.append(_phase(n) * (acc / float(n_points)))
     return recovered
+
+
+def _psi(v: complex, *, dt: float, eta: float, sigma: float) -> complex:
+    return cmath.exp(dt * (eta * 1j * v - 0.5 * (sigma**2) * (v**2)))
+
+
+def _psi_prime(v: complex, *, dt: float, eta: float, sigma: float) -> complex:
+    psi_v = _psi(v, dt=dt, eta=eta, sigma=sigma)
+    return dt * ((eta * 1j) - (sigma**2) * v) * psi_v
+
+
+def build_multipliers(
+    grids: CoreGrids,
+    *,
+    alpha: float,
+    eta: float,
+    sigma: float,
+) -> FourierMultipliers:
+    """Build Fourier multipliers from the short-time Gaussian characteristic function."""
+
+    psi_y: list[complex] = []
+    psi_z: list[complex] = []
+    for vj in grids.v:
+        shifted = complex(vj, alpha)
+        psi_shift = _psi(shifted, dt=grids.dt, eta=eta, sigma=sigma)
+        psi_y.append(psi_shift)
+        psi_z.append(sigma * (1j * vj - alpha) * psi_shift)
+    return FourierMultipliers(psi_y=psi_y, psi_z=psi_z)
