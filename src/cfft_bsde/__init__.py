@@ -1,7 +1,7 @@
 """
 cfft-bsde: convolution–FFT methods for BSDEs (course project scaffold).
 
-Sections: ``cfft`` (HO2017 / GH2025), ``models``, ``validation``, ``benchmarks``,
+Sections: ``cfft`` (HO2017 / GH2025 / core algorithm), ``models``, ``validation``, ``benchmarks``,
 ``robustness``, ``adaptive``, ``baselines``.
 """
 
