@@ -1,6 +1,23 @@
 # MATH5030
 MATH5030 @ columbia university MAFN 2026 spring
 
+## Core Algorithm (CFFT-BSDE)
+
+This project currently focuses on a core convolution-FFT backward solver for BSDEs with boundary control.
+
+Brief implementation flow:
+
+1. Define solver inputs: model drift/diffusion, BSDE driver, terminal condition, and numerical config.
+2. Build uniform time, spatial, and frequency grids on a truncated log-price domain.
+3. Apply centered discrete Fourier transforms using phase shifts for FFT-ready convolution.
+4. Construct short-time characteristic-function multipliers for Y and Z updates.
+5. Compute damping-shift recovery terms and solve per-step exponential shift parameters `(A, B)`.
+6. Run backward time recursion: damp/shift -> Fourier-domain convolution -> inverse transform -> undamp/unshift -> driver update.
+7. Return full `Y(t, x)` and `Z(t, x)` surfaces through `solve_core(...)`.
+
+Main implementation: `src/cfft_bsde/cfft/core_algorithm.py`  
+Console entrypoint: `src/cfft_bsde/cli.py`
+
 ## Simple Python Console App
 
 ### Windows
