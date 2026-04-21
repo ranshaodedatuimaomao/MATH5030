@@ -6,11 +6,13 @@ from __future__ import annotations
 
 import cmath
 from dataclasses import dataclass
+from typing import Literal
 from typing import Callable
 
 
 RealFunc = Callable[[float], float]
 DriverFunc = Callable[[float, float, float, float], float]
+MethodName = Literal["boundary_control", "old_2017"]
 
 
 @dataclass(frozen=True)
@@ -233,6 +235,62 @@ def solve_shift_params(x: list[float], y: list[float], *, alpha: float, dx: floa
     return ShiftParams(a=a_val, b=b_val)
 
 
+def solve_linear_shift_params(
+    x: list[float],
+    y: list[float],
+    *,
+    alpha: float,
+    dx: float,
+) -> ShiftParams:
+    """Solve A,B for h(x)=A*x+B using periodicity of damped value/slope."""
+
+    x_left = x[0]
+    x_right = x[-1]
+    y_left = y[0]
+    y_right = y[-1]
+    yprime_left, yprime_right = _one_sided_boundary_slopes(y, dx)
+
+    damp_left = cmath.exp(alpha * x_left).real
+    damp_right = cmath.exp(alpha * x_right).real
+
+    c1 = damp_left * x_left - damp_right * x_right
+    d1 = damp_left - damp_right
+    r1 = damp_left * y_left - damp_right * y_right
+
+    c2 = damp_left * (alpha * x_left + 1.0) - damp_right * (alpha * x_right + 1.0)
+    d2 = alpha * (damp_left - damp_right)
+    r2 = damp_left * (alpha * y_left + yprime_left) - damp_right * (alpha * y_right + yprime_right)
+
+    det = c1 * d2 - c2 * d1
+    if abs(det) < 1e-14:
+        return ShiftParams(a=0.0, b=0.0)
+    a_val = (r1 * d2 - r2 * d1) / det
+    b_val = (c1 * r2 - c2 * r1) / det
+    return ShiftParams(a=a_val, b=b_val)
+
+
+def _suggest_adaptive_alpha(
+    x: list[float],
+    y: list[float],
+    *,
+    default_alpha: float,
+) -> float:
+    """Heuristic per-step alpha update, clipped to stable negative range."""
+
+    x_left = x[0]
+    x_right = x[-1]
+    y_left = max(abs(y[0]), 1e-12)
+    y_right = max(abs(y[-1]), 1e-12)
+    span = x_right - x_left
+    if span <= 0.0:
+        return default_alpha
+    # Enforce alpha < 0 for damping while adapting to boundary growth.
+    raw = -abs(cmath.log(y_right / y_left).real / span)
+    if not (raw < 0.0):
+        raw = default_alpha
+    return min(-0.1, max(-8.0, raw))
+
+
 def initialize_state(grids: CoreGrids, terminal_condition: RealFunc) -> SolverState:
     """Initialize Y at terminal time and Z with zeros."""
 
@@ -250,6 +308,7 @@ def run_backward_core(
     inputs: CoreInputs,
     x_center: float,
     enforce_positivity: bool = False,
+    method: MethodName = "boundary_control",
 ) -> tuple[CoreGrids, SolverState]:
     """Run the core backward CFFT recursion."""
 
@@ -260,22 +319,32 @@ def run_backward_core(
 
     for k in range(len(grids.t) - 2, -1, -1):
         tk = grids.t[k]
+        if method == "old_2017":
+            alpha_k = _suggest_adaptive_alpha(grids.x, state.y[k + 1], default_alpha=config.damping_alpha)
+        else:
+            alpha_k = config.damping_alpha
         eta_k = inputs.eta(tk, x_ref)
         sigma_k = inputs.sigma(tk, x_ref)
         multipliers = build_multipliers(
             grids,
-            alpha=config.damping_alpha,
+            alpha=alpha_k,
             eta=eta_k,
             sigma=sigma_k,
         )
-        recovery = build_recovery_terms(grids, eta=eta_k, sigma=sigma_k)
         y_next = state.y[k + 1]
-        shift = solve_shift_params(grids.x, y_next, alpha=config.damping_alpha, dx=grids.dx)
+        if method == "old_2017":
+            shift = solve_linear_shift_params(grids.x, y_next, alpha=alpha_k, dx=grids.dx)
+        else:
+            shift = solve_shift_params(grids.x, y_next, alpha=alpha_k, dx=grids.dx)
+        recovery = build_recovery_terms(grids, eta=eta_k, sigma=sigma_k)
 
         y_tilde: list[complex] = []
         for i, xi in enumerate(grids.x):
-            shifted = shift.a * cmath.exp(xi).real + shift.b
-            y_tilde.append(cmath.exp(config.damping_alpha * xi) * (y_next[i] - shifted))
+            if method == "old_2017":
+                shifted = shift.a * xi + shift.b
+            else:
+                shifted = shift.a * cmath.exp(xi).real + shift.b
+            y_tilde.append(cmath.exp(alpha_k * xi) * (y_next[i] - shifted))
 
         y_hat = centered_dft(y_tilde, grids.x, grids.v)
         y_conv_hat = [y_hat[j] * multipliers.psi_y[j] for j in range(len(y_hat))]
@@ -286,9 +355,13 @@ def run_backward_core(
         y_k: list[float] = []
         z_k: list[float] = []
         for i, xi in enumerate(grids.x):
-            undamp = cmath.exp(-config.damping_alpha * xi).real
-            y_pre = undamp * y_conv[i].real + shift.a * recovery.y_term[i] + shift.b
-            z_pre = undamp * z_conv[i].real + shift.a * recovery.z_term[i]
+            undamp = cmath.exp(-alpha_k * xi).real
+            if method == "old_2017":
+                y_pre = undamp * y_conv[i].real + shift.a * xi + shift.b
+                z_pre = undamp * z_conv[i].real
+            else:
+                y_pre = undamp * y_conv[i].real + shift.a * recovery.y_term[i] + shift.b
+                z_pre = undamp * z_conv[i].real + shift.a * recovery.z_term[i]
             y_new = y_pre + grids.dt * inputs.driver(tk, xi, y_pre, z_pre)
             if enforce_positivity:
                 y_new = max(y_new, 0.0)
@@ -307,6 +380,7 @@ def solve_core(
     inputs: CoreInputs,
     x_center: float,
     enforce_positivity: bool = False,
+    method: MethodName = "boundary_control",
 ) -> CoreSolution:
     """Public core-only solve API."""
 
@@ -315,5 +389,6 @@ def solve_core(
         inputs=inputs,
         x_center=x_center,
         enforce_positivity=enforce_positivity,
+        method=method,
     )
     return CoreSolution(t=grids.t, x=grids.x, y=state.y, z=state.z)
