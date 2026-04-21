@@ -234,3 +234,62 @@ def initialize_state(grids: CoreGrids, terminal_condition: RealFunc) -> SolverSt
     z = [[0.0 for _ in range(n_space)] for _ in range(n_time)]
     y[-1] = [terminal_condition(xi) for xi in grids.x]
     return SolverState(y=y, z=z)
+
+
+def run_backward_core(
+    *,
+    config: CoreConfig,
+    inputs: CoreInputs,
+    x_center: float,
+    enforce_positivity: bool = False,
+) -> tuple[CoreGrids, SolverState]:
+    """
+    Run the core backward CFFT recursion (no benchmarking or validation layers).
+    """
+
+    grids = build_grids(config, x_center=x_center)
+    state = initialize_state(grids, inputs.terminal_condition)
+    center_idx = len(grids.x) // 2
+    x_ref = grids.x[center_idx]
+
+    for k in range(len(grids.t) - 2, -1, -1):
+        tk = grids.t[k]
+        eta_k = inputs.eta(tk, x_ref)
+        sigma_k = inputs.sigma(tk, x_ref)
+        multipliers = build_multipliers(
+            grids,
+            alpha=config.damping_alpha,
+            eta=eta_k,
+            sigma=sigma_k,
+        )
+        recovery = build_recovery_terms(grids, eta=eta_k, sigma=sigma_k)
+        y_next = state.y[k + 1]
+        shift = solve_shift_params(grids.x, y_next, alpha=config.damping_alpha, dx=grids.dx)
+
+        y_tilde: list[complex] = []
+        for i, xi in enumerate(grids.x):
+            shifted = shift.a * cmath.exp(xi).real + shift.b
+            y_tilde.append(cmath.exp(config.damping_alpha * xi) * (y_next[i] - shifted))
+
+        y_hat = centered_dft(y_tilde, grids.x, grids.v)
+        y_conv_hat = [y_hat[j] * multipliers.psi_y[j] for j in range(len(y_hat))]
+        z_conv_hat = [y_hat[j] * multipliers.psi_z[j] for j in range(len(y_hat))]
+        y_conv = centered_idft(y_conv_hat, grids.x, grids.v)
+        z_conv = centered_idft(z_conv_hat, grids.x, grids.v)
+
+        y_k: list[float] = []
+        z_k: list[float] = []
+        for i, xi in enumerate(grids.x):
+            undamp = cmath.exp(-config.damping_alpha * xi).real
+            y_pre = undamp * y_conv[i].real + shift.a * recovery.y_term[i] + shift.b
+            z_pre = undamp * z_conv[i].real + shift.a * recovery.z_term[i]
+            y_new = y_pre + grids.dt * inputs.driver(tk, xi, y_pre, z_pre)
+            if enforce_positivity:
+                y_new = max(y_new, 0.0)
+            y_k.append(y_new)
+            z_k.append(z_pre)
+
+        state.y[k] = y_k
+        state.z[k] = z_k
+
+    return grids, state
