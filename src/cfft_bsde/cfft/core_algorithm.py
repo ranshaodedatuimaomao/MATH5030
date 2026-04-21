@@ -317,59 +317,67 @@ def run_backward_core(
     center_idx = len(grids.x) // 2
     x_ref = grids.x[center_idx]
 
-    for k in range(len(grids.t) - 2, -1, -1):
-        tk = grids.t[k]
+    for time_idx in range(len(grids.t) - 2, -1, -1):
+        time_value = grids.t[time_idx]
         if method == "old_2017":
-            alpha_k = _suggest_adaptive_alpha(grids.x, state.y[k + 1], default_alpha=config.damping_alpha)
+            damping_alpha = _suggest_adaptive_alpha(
+                grids.x,
+                state.y[time_idx + 1],
+                default_alpha=config.damping_alpha,
+            )
         else:
-            alpha_k = config.damping_alpha
-        eta_k = inputs.eta(tk, x_ref)
-        sigma_k = inputs.sigma(tk, x_ref)
+            damping_alpha = config.damping_alpha
+        eta_value = inputs.eta(time_value, x_ref)
+        sigma_value = inputs.sigma(time_value, x_ref)
         multipliers = build_multipliers(
             grids,
-            alpha=alpha_k,
-            eta=eta_k,
-            sigma=sigma_k,
+            alpha=damping_alpha,
+            eta=eta_value,
+            sigma=sigma_value,
         )
-        y_next = state.y[k + 1]
+        y_next = state.y[time_idx + 1]
         if method == "old_2017":
-            shift = solve_linear_shift_params(grids.x, y_next, alpha=alpha_k, dx=grids.dx)
+            shift_params = solve_linear_shift_params(grids.x, y_next, alpha=damping_alpha, dx=grids.dx)
         else:
-            shift = solve_shift_params(grids.x, y_next, alpha=alpha_k, dx=grids.dx)
-        recovery = build_recovery_terms(grids, eta=eta_k, sigma=sigma_k)
+            shift_params = solve_shift_params(grids.x, y_next, alpha=damping_alpha, dx=grids.dx)
+        recovery_terms = build_recovery_terms(grids, eta=eta_value, sigma=sigma_value)
 
         y_tilde: list[complex] = []
-        for i, xi in enumerate(grids.x):
+        for space_idx, x_value in enumerate(grids.x):
             if method == "old_2017":
-                shifted = shift.a * xi + shift.b
+                shifted_value = shift_params.a * x_value + shift_params.b
             else:
-                shifted = shift.a * cmath.exp(xi).real + shift.b
-            y_tilde.append(cmath.exp(alpha_k * xi) * (y_next[i] - shifted))
+                shifted_value = shift_params.a * cmath.exp(x_value).real + shift_params.b
+            y_tilde.append(cmath.exp(damping_alpha * x_value) * (y_next[space_idx] - shifted_value))
 
         y_hat = centered_dft(y_tilde, grids.x, grids.v)
-        y_conv_hat = [y_hat[j] * multipliers.psi_y[j] for j in range(len(y_hat))]
-        z_conv_hat = [y_hat[j] * multipliers.psi_z[j] for j in range(len(y_hat))]
+        y_conv_hat = [y_hat[frequency_idx] * multipliers.psi_y[frequency_idx] for frequency_idx in range(len(y_hat))]
+        z_conv_hat = [y_hat[frequency_idx] * multipliers.psi_z[frequency_idx] for frequency_idx in range(len(y_hat))]
         y_conv = centered_idft(y_conv_hat, grids.x, grids.v)
         z_conv = centered_idft(z_conv_hat, grids.x, grids.v)
 
-        y_k: list[float] = []
-        z_k: list[float] = []
-        for i, xi in enumerate(grids.x):
-            undamp = cmath.exp(-alpha_k * xi).real
+        y_current: list[float] = []
+        z_current: list[float] = []
+        for space_idx, x_value in enumerate(grids.x):
+            undamped_value = cmath.exp(-damping_alpha * x_value).real
             if method == "old_2017":
-                y_pre = undamp * y_conv[i].real + shift.a * xi + shift.b
-                z_pre = undamp * z_conv[i].real
+                y_pre = undamped_value * y_conv[space_idx].real + shift_params.a * x_value + shift_params.b
+                z_pre = undamped_value * z_conv[space_idx].real
             else:
-                y_pre = undamp * y_conv[i].real + shift.a * recovery.y_term[i] + shift.b
-                z_pre = undamp * z_conv[i].real + shift.a * recovery.z_term[i]
-            y_new = y_pre + grids.dt * inputs.driver(tk, xi, y_pre, z_pre)
+                y_pre = (
+                    undamped_value * y_conv[space_idx].real
+                    + shift_params.a * recovery_terms.y_term[space_idx]
+                    + shift_params.b
+                )
+                z_pre = undamped_value * z_conv[space_idx].real + shift_params.a * recovery_terms.z_term[space_idx]
+            y_new = y_pre + grids.dt * inputs.driver(time_value, x_value, y_pre, z_pre)
             if enforce_positivity:
                 y_new = max(y_new, 0.0)
-            y_k.append(y_new)
-            z_k.append(z_pre)
+            y_current.append(y_new)
+            z_current.append(z_pre)
 
-        state.y[k] = y_k
-        state.z[k] = z_k
+        state.y[time_idx] = y_current
+        state.z[time_idx] = z_current
 
     return grids, state
 
