@@ -23,6 +23,13 @@ Method variants exposed by CLI:
 - `boundary_control` (default): fixed damping + time-dependent exponential shift.
 - `old_2017`: legacy-style path with adaptive damping heuristic + linear shift.
 
+Benchmark comparison mode:
+
+- Runs both methods on the same parameter grid and writes a CSV with
+  Black-Scholes price/delta error metrics.
+- Example:
+  - `python -m cfft_bsde.cli --benchmark-compare --benchmark-n-values "1000,2000" --benchmark-l-values "10,12,14" --benchmark-grid-values "1024,2048" --benchmark-output "results/benchmark.csv"`
+
 ## Simple Python Console App
 
 ### Windows
