@@ -82,6 +82,14 @@ class ShiftParams:
     b: float
 
 
+@dataclass
+class SolverState:
+    """Time-space storage for backward recursion arrays."""
+
+    y: list[list[float]]
+    z: list[list[float]]
+
+
 def build_grids(config: CoreConfig, *, x_center: float) -> CoreGrids:
     """Build uniform time, space, and frequency grids used by the solver."""
 
@@ -215,3 +223,14 @@ def solve_shift_params(x: list[float], y: list[float], *, alpha: float, dx: floa
     a_val = (r1 * d2 - r2 * d1) / det
     b_val = (c1 * r2 - c2 * r1) / det
     return ShiftParams(a=a_val, b=b_val)
+
+
+def initialize_state(grids: CoreGrids, terminal_condition: RealFunc) -> SolverState:
+    """Initialize Y at terminal time and Z with zeros."""
+
+    n_time = len(grids.t)
+    n_space = len(grids.x)
+    y = [[0.0 for _ in range(n_space)] for _ in range(n_time)]
+    z = [[0.0 for _ in range(n_space)] for _ in range(n_time)]
+    y[-1] = [terminal_condition(xi) for xi in grids.x]
+    return SolverState(y=y, z=z)
