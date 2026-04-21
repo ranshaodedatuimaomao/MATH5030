@@ -32,6 +32,8 @@ Benchmark comparison mode:
   - `intrinsic_call`
 - Example:
   - `python -m cfft_bsde.cli --benchmark-compare --benchmark-methods "boundary_control,old_2017" --benchmark-model "black_scholes_call" --benchmark-n-values "1000,2000" --benchmark-l-values "10,12,14" --benchmark-grid-values "1024,2048" --benchmark-output "results/benchmark.csv"`
+- Optional full-surface mode (keeps default one-point mode unless enabled):
+  - `python -m cfft_bsde.cli --benchmark-compare --benchmark-full-surface --surface-spot-min 60 --surface-spot-max 140 --surface-spot-points 81 --benchmark-output "results/benchmark_surface.csv"`
 
 ## Simple Python Console App
 

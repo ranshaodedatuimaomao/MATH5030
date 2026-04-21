@@ -28,6 +28,10 @@ def _run_benchmark_comparison(args: argparse.Namespace) -> None:
         benchmark_model=args.benchmark_model,
         enforce_positivity=args.enforce_positivity,
         output_path=args.benchmark_output,
+        full_surface=args.benchmark_full_surface,
+        surface_spot_min=args.surface_spot_min,
+        surface_spot_max=args.surface_spot_max,
+        surface_spot_points=args.surface_spot_points,
     )
     market = MarketParams(
         spot=args.spot,
@@ -145,6 +149,14 @@ def _build_parser() -> argparse.ArgumentParser:
         default="results/benchmark_comparison.csv",
         help="Output CSV path for benchmark mode",
     )
+    parser.add_argument(
+        "--benchmark-full-surface",
+        action="store_true",
+        help="Evaluate benchmark metrics on a full spot surface instead of only at spot",
+    )
+    parser.add_argument("--surface-spot-min", type=float, default=60.0, help="Minimum spot for full-surface benchmark")
+    parser.add_argument("--surface-spot-max", type=float, default=140.0, help="Maximum spot for full-surface benchmark")
+    parser.add_argument("--surface-spot-points", type=int, default=81, help="Number of spot points for full surface")
     return parser
 
 
