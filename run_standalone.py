@@ -1,7 +1,7 @@
 """
 Standalone launcher:
 1) installs this package from the local repo
-2) imports and runs the console app main()
+2) imports and runs the core algorithm console app
 """
 
 from __future__ import annotations
@@ -23,7 +23,16 @@ def main() -> None:
 
     from cfft_bsde.cli import main as cli_main
 
-    cli_main()
+    cli_main(
+        [
+            "--n-time-steps",
+            "32",
+            "--n-space-points",
+            "128",
+            "--truncation-length",
+            "12.0",
+        ]
+    )
 
 
 if __name__ == "__main__":
