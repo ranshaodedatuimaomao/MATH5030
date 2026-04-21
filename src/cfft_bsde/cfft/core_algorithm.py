@@ -4,6 +4,7 @@ Core implementation building blocks for the boundary-controlled CFFT-BSDE method
 
 from __future__ import annotations
 
+import cmath
 from dataclasses import dataclass
 from typing import Callable
 
@@ -71,3 +72,32 @@ def build_grids(config: CoreConfig, *, x_center: float) -> CoreGrids:
     n_half = config.n_space_points / 2.0
     v = [(j - n_half) * dv for j in range(config.n_space_points)]
     return CoreGrids(t=t, x=x, v=v, dt=dt, dx=dx, dv=dv)
+
+
+def _phase(i: int) -> float:
+    return -1.0 if i % 2 else 1.0
+
+
+def centered_dft(values: list[complex], x: list[float], v: list[float]) -> list[complex]:
+    """Centered discrete Fourier transform with (-1)^n phase shift."""
+
+    transformed: list[complex] = []
+    for vk in v:
+        acc = 0j
+        for n, xn in enumerate(x):
+            acc += (_phase(n) * values[n]) * cmath.exp(-1j * vk * xn)
+        transformed.append(acc)
+    return transformed
+
+
+def centered_idft(values: list[complex], x: list[float], v: list[float]) -> list[complex]:
+    """Centered inverse discrete Fourier transform with (-1)^n phase shift."""
+
+    n_points = len(x)
+    recovered: list[complex] = []
+    for n, xn in enumerate(x):
+        acc = 0j
+        for k, vk in enumerate(v):
+            acc += values[k] * cmath.exp(1j * vk * xn)
+        recovered.append(_phase(n) * (acc / float(n_points)))
+    return recovered
