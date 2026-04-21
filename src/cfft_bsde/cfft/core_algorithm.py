@@ -90,6 +90,16 @@ class SolverState:
     z: list[list[float]]
 
 
+@dataclass(frozen=True)
+class CoreSolution:
+    """Core algorithm output container."""
+
+    t: list[float]
+    x: list[float]
+    y: list[list[float]]
+    z: list[list[float]]
+
+
 def build_grids(config: CoreConfig, *, x_center: float) -> CoreGrids:
     """Build uniform time, space, and frequency grids used by the solver."""
 
@@ -293,3 +303,21 @@ def run_backward_core(
         state.z[k] = z_k
 
     return grids, state
+
+
+def solve_core(
+    *,
+    config: CoreConfig,
+    inputs: CoreInputs,
+    x_center: float,
+    enforce_positivity: bool = False,
+) -> CoreSolution:
+    """Public core-only solve API."""
+
+    grids, state = run_backward_core(
+        config=config,
+        inputs=inputs,
+        x_center=x_center,
+        enforce_positivity=enforce_positivity,
+    )
+    return CoreSolution(t=grids.t, x=grids.x, y=state.y, z=state.z)
