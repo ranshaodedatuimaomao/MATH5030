@@ -25,10 +25,13 @@ Method variants exposed by CLI:
 
 Benchmark comparison mode:
 
-- Runs both methods on the same parameter grid and writes a CSV with
-  Black-Scholes price/delta error metrics.
+- Runs selected methods on the same parameter grid and writes a CSV with
+  benchmark price/delta error metrics.
+- Benchmark model is switchable via `--benchmark-model`:
+  - `black_scholes_call` (default)
+  - `intrinsic_call`
 - Example:
-  - `python -m cfft_bsde.cli --benchmark-compare --benchmark-n-values "1000,2000" --benchmark-l-values "10,12,14" --benchmark-grid-values "1024,2048" --benchmark-output "results/benchmark.csv"`
+  - `python -m cfft_bsde.cli --benchmark-compare --benchmark-methods "boundary_control,old_2017" --benchmark-model "black_scholes_call" --benchmark-n-values "1000,2000" --benchmark-l-values "10,12,14" --benchmark-grid-values "1024,2048" --benchmark-output "results/benchmark.csv"`
 
 ## Simple Python Console App
 
