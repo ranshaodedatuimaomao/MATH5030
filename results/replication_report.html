@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CFFT-BSDE replication summary</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #fafafa;
+      --fg: #1a1a1a;
+      --muted: #555;
+      --border: #ccc;
+      --accent: #0b57d0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --fg: #ececec;
+        --muted: #aaa;
+        --border: #444;
+        --accent: #8ab4f8;
+      }
+    }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif;
+      line-height: 1.55;
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+      background: var(--bg);
+      color: var(--fg);
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 0.35rem; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; margin-top: 0; }
+    h2 { font-size: 1.15rem; margin-top: 1.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+    p { margin: 0.65rem 0; }
+    a { color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 0.75rem 0; }
+    th, td { border: 1px solid var(--border); padding: 0.45rem 0.55rem; text-align: left; vertical-align: top; }
+    th { background: rgba(0,0,0,0.04); }
+    @media (prefers-color-scheme: dark) {
+      th { background: rgba(255,255,255,0.06); }
+    }
+    code, pre { font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace; font-size: 0.84rem; }
+    pre {
+      background: rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      overflow-x: auto;
+      border-radius: 6px;
+    }
+    @media (prefers-color-scheme: dark) {
+      pre { background: rgba(255,255,255,0.06); }
+    }
+    .figures { display: grid; gap: 1rem; margin: 1rem 0; }
+    @media (min-width: 40rem) {
+      .figures { grid-template-columns: 1fr 1fr; }
+    }
+    figure { margin: 0; border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem; background: rgba(0,0,0,0.02); }
+    @media (prefers-color-scheme: dark) {
+      figure { background: rgba(255,255,255,0.03); }
+    }
+    figcaption { font-size: 0.8rem; color: var(--muted); margin-top: 0.35rem; }
+    figure img { width: 100%; height: auto; display: block; border-radius: 4px; }
+    .note { font-size: 0.88rem; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 0.75rem; margin: 1rem 0; }
+    footer { margin-top: 2.5rem; font-size: 0.8rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <h1>CFFT-BSDE numerical replication (short report)</h1>
+  <p class="subtitle">MATH5030 · Convolution–FFT backward BSDE solver · benchmark vs Black–Scholes European call</p>
+
+  <p>
+    This report summarizes the <strong>finished replication bundle</strong> in the repository:
+    committed benchmark CSVs, paper-style error curves and a delta surface plot, and the two numerical
+    schemes exposed by the CLI. The theoretical reference is the course manuscript
+    <a href="../paper.pdf">paper.pdf</a> (boundary error control for CFFT-BSDE).
+  </p>
+
+  <h2>1. Methods compared</h2>
+  <table>
+    <thead>
+      <tr><th>CLI <code>method</code></th><th>Role</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>new_boundary_control</code></td>
+        <td>New scheme: fixed damping and time-varying exponential shift with recovery terms (boundary-error control).</td>
+      </tr>
+      <tr>
+        <td><code>legacy_hyndman_2017</code></td>
+        <td>Legacy path after Hyndman &amp; Oyono Ngou (2017): adaptive damping heuristic and linear shift in log-price.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. Data and figure artifacts</h2>
+  <p>All paths below are relative to the repository root (this file lives in <code>results/</code>).</p>
+  <table>
+    <thead>
+      <tr><th>Artifact</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>results/numerical_results_quick.csv</code></td><td>One-point sweep at <code>spot_eval = 100</code>; coarse grid smoke test.</td></tr>
+      <tr><td><code>results/numerical_results_surface_quick.csv</code></td><td>Spot grid 60–140 (41 points); used for paper-style error curves.</td></tr>
+      <tr><td><code>results/benchmark_smoke.csv</code></td><td>Minimal two-row sanity check.</td></tr>
+      <tr><td><code>results/figure_01_legacy_price_delta_errors.png</code></td><td>|Price| and |delta| errors vs spot (legacy).</td></tr>
+      <tr><td><code>results/figure_02_new_boundary_price_delta_errors.png</code></td><td>Same layout for new boundary control.</td></tr>
+      <tr><td><code>results/figure_03_new_boundary_delta_surface.png</code></td><td>Delta heatmap vs (spot, time) from a fresh core solve.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Snapshot metrics (smoke-test grids)</h2>
+  <p>
+    Aggregates below are <strong>not</strong> fine-grid <code>paper.pdf</code> replication; they characterize the committed
+    quick exports so you can sanity-check the pipeline and compare methods on identical inputs.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>CSV</th>
+        <th><code>new_boundary_control</code></th>
+        <th><code>legacy_hyndman_2017</code></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>numerical_results_quick.csv</code> (8 rows each)</td>
+        <td>mean <code>abs_price_err</code> ≈ 9.13 (max ≈ 9.41); mean <code>abs_delta_z_err</code> ≈ 0.557 (max ≈ 0.559)</td>
+        <td>mean <code>abs_price_err</code> ≈ 2475.88 (max ≈ 5824.38); mean <code>abs_delta_z_err</code> ≈ 7.28 (max ≈ 25.60)</td>
+      </tr>
+      <tr>
+        <td><code>numerical_results_surface_quick.csv</code> (41 rows each)</td>
+        <td>mean <code>abs_price_err</code> ≈ 13.79 (max ≈ 42.39); mean <code>abs_delta_z_err</code> ≈ 0.511 (max ≈ 0.957)</td>
+        <td>mean <code>abs_price_err</code> ≈ 11.56 (max ≈ 38.43); mean <code>abs_delta_z_err</code> ≈ 2.55 (max ≈ 2.74)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>4. Figures (embedded)</h2>
+  <p>Open this HTML from disk with the images alongside it (same <code>results/</code> folder) so relative image paths resolve.</p>
+  <div class="figures">
+    <figure>
+      <img src="figure_01_legacy_price_delta_errors.png" alt="Legacy method: absolute price and delta errors vs spot" width="640" height="480" loading="lazy" />
+      <figcaption>Figure 1 (replication style): legacy Hyndman &amp; Oyono Ngou (2017) path.</figcaption>
+    </figure>
+    <figure>
+      <img src="figure_02_new_boundary_price_delta_errors.png" alt="New boundary control: absolute price and delta errors vs spot" width="640" height="480" loading="lazy" />
+      <figcaption>Figure 2 (replication style): new boundary control.</figcaption>
+    </figure>
+    <figure style="grid-column: 1 / -1;">
+      <img src="figure_03_new_boundary_delta_surface.png" alt="Delta surface in spot and time for new boundary control" width="960" height="540" loading="lazy" />
+      <figcaption>Figure 3 (replication style): delta surface from <code>solve_core</code> (<code>new_boundary_control</code>).</figcaption>
+    </figure>
+  </div>
+
+  <h2>5. How to regenerate</h2>
+  <p>Install the package, rerun benchmarks, then rebuild figures.</p>
+  <pre>python -m pip install -e .
+python -m cfft_bsde.cli --benchmark-compare ^
+  --benchmark-methods "new_boundary_control,legacy_hyndman_2017" ^
+  --benchmark-model black_scholes_call --spot 100 --strike 100 --rate 0.01 --sigma 0.2 --maturity 1 ^
+  --benchmark-n-values "64,128" --benchmark-l-values "10,12" --benchmark-grid-values "128,256" ^
+  --benchmark-output results/numerical_results_quick.csv
+
+python -m cfft_bsde.cli --benchmark-compare ^
+  --benchmark-methods "new_boundary_control,legacy_hyndman_2017" ^
+  --benchmark-model black_scholes_call --benchmark-full-surface ^
+  --surface-spot-min 60 --surface-spot-max 140 --surface-spot-points 41 ^
+  --benchmark-n-values 64 --benchmark-l-values 10 --benchmark-grid-values 128 ^
+  --benchmark-output results/numerical_results_surface_quick.csv
+
+python -m pip install matplotlib
+python -m cfft_bsde.plot_paper_figures --surface-csv results/numerical_results_surface_quick.csv --output-dir results</pre>
+  <p class="note">On Unix shells, replace caret line continuations (<code>^</code>) with backslashes or single-line commands. For paper-scale grids, increase <code>n</code>, <code>L</code>, and <code>N</code> in the CLI flags and expect much longer runtimes.</p>
+
+  <h2>6. Benchmark columns (reference)</h2>
+  <p>Each benchmark row includes Black–Scholes reference prices/deltas, CFFT values, and absolute or relative errors; see the package driver <code>cfft_bsde.benchmark_driver</code> for the authoritative field list.</p>
+
+  <footer>
+    Generated as a static companion to the repository artifacts. Branch: <code>replication-html-report</code>.
+  </footer>
+</body>
+</html>
