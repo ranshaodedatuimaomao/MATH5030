@@ -18,6 +18,14 @@ Brief implementation flow:
 Main implementation: `src/cfft_bsde/cfft/core_algorithm.py`  
 Console entrypoint: `src/cfft_bsde/cli.py`
 
+### Interactive menu (terminal)
+
+From an **interactive terminal**, run **`cfft-bsde`**, **`python -m cfft_bsde.cli`**, or **`python app.py`** with **no extra arguments** to get a short prompt: open the existing replication HTML, run full replication, or run a one-off core demo. The same menu appears if you pass **`--menu`** (useful when stdin is not a TTY but you still want the prompt).
+
+**`run_standalone.py`** uses the **same menu** by default: **`python run_standalone.py`** (or explicitly **`--mode auto`**) runs `pip install -e .` first, then shows the menu in a terminal. Use **`--mode menu`** to force the menu even when stdin is not a TTY. With **`--mode auto`** and a **non-interactive** stdin (CI, pipes), it falls back to a **core** preset solve instead of blocking on `input()`.
+
+If **stdin is not a terminal** (pipelines, CI), an empty **`cfft-bsde`** / **`python -m cfft_bsde.cli`** command still runs a **single core solve** so automation keeps working.
+
 Method variants exposed by CLI (CSV `method` column uses the same strings):
 
 - **`new_boundary_control`** (default): boundary-error control scheme from the course paper—fixed damping plus a time-varying exponential shift `h(x)=A*exp(x)+B` with recovery terms.
@@ -36,7 +44,7 @@ After `pip install -e .`, use **exactly one** of the following primary actions (
 | **2. View** the existing HTML report in your browser (no computation) | `python -m cfft_bsde.cli --open-replication-report` |
 | Optional explicit HTML path | `python -m cfft_bsde.cli --open-replication-report --replication-report path/to/replication_report.html` |
 
-Equivalent standalone launcher (also runs `pip install -e .` first): `python run_standalone.py --mode replication` or `--mode open-report`. See **Standalone launcher script** below.
+Equivalent standalone launcher (also runs `pip install -e .` first): default **`python run_standalone.py`** opens the same interactive menu in a terminal; **`--mode replication`** / **`--mode open-report`** match **`--run-replication`** / **`--open-replication-report`**. See **Standalone launcher script** below.
 
 ### Custom benchmark comparison (`--benchmark-compare`)
 
@@ -59,7 +67,7 @@ This repo currently includes small benchmark exports committed under `results/`:
 - `results/numerical_results_quick.csv`: one-point (`spot_eval = 100`) sweep over a coarse grid intended for quick smoke testing.
 - `results/numerical_results_surface_quick.csv`: the same benchmark metrics evaluated on a spot grid from 60 to 140 (41 points), intended to sanity-check boundary behavior quickly.
 - `results/benchmark_smoke.csv`: minimal two-row smoke file (one solve per method) using the same `method` labels as the CLI.
-- `results/replication_report.html`: short HTML summary of the replication bundle (CSVs + figures). Regenerate inputs with `cfft-bsde --run-replication` (or `run_standalone.py --mode replication`); open the file with `cfft-bsde --open-replication-report` or `run_standalone.py --mode open-report`.
+- `results/replication_report.html`: short HTML summary of the replication bundle (CSVs + figures). Regenerate inputs with `cfft-bsde --run-replication` (or `run_standalone.py --mode replication`); open from the interactive menu (`cfft-bsde` / `run_standalone.py` with no args in a terminal) or with `cfft-bsde --open-replication-report` / `run_standalone.py --mode open-report`.
 
 PNG plots derived from these runs (paper-style layout) live in the same folder; see **Paper-style replication figures (PNG)** below.
 
@@ -123,6 +131,8 @@ python -m pip install -r requirements.txt
 python app.py
 ```
 
+In a normal terminal window, `python app.py` with no arguments opens the **interactive menu** (see **Interactive menu (terminal)** above).
+
 ### macOS
 
 1) Install Python 3:
@@ -136,6 +146,8 @@ python3 --version
 python3 -m pip install -r requirements.txt
 python3 app.py
 ```
+
+In a normal terminal, `python3 app.py` with no arguments opens the **interactive menu**.
 
 ## Install as a package (pip)
 
@@ -164,23 +176,26 @@ cfft-bsde --open-replication-report
 
 ## Standalone launcher script
 
-Use `run_standalone.py` if you want one command that installs the local package and then runs a preset.
-
-**Bundled replication (two modes):**
+Use `run_standalone.py` for **one command** that runs `pip install -e .` and then either the **same interactive menu** as `cfft-bsde` (default) or an explicit preset.
 
 | Goal | Command |
 | --- | --- |
-| **1. Rerun** full replication (same steps as `cfft-bsde --run-replication`) | `python run_standalone.py --mode replication` |
+| **Interactive menu** (open HTML / run replication / core demo) — default | `python run_standalone.py` or `python run_standalone.py --mode auto` |
+| **Force** that menu (even if stdin might not look like a TTY) | `python run_standalone.py --mode menu` |
+| **1. Rerun** full replication (same as `cfft-bsde --run-replication`) | `python run_standalone.py --mode replication` |
 | CSVs only (skip matplotlib figures) | `python run_standalone.py --mode replication --skip-figures` |
-| **2. Open** existing `results/replication_report.html` in the browser | `python run_standalone.py --mode open-report` |
+| **2. Open** existing `results/replication_report.html` | `python run_standalone.py --mode open-report` |
+| Core or benchmark **presets** only (no menu) | `python run_standalone.py --mode core` (or `benchmark-point` / `benchmark-surface`) |
+
+With **`--mode auto`** or **`menu`**, do not pass **`--extra-cli-args`** (use an explicit `--mode` if you need extra CLI flags).
 
 ### Windows
 
 ```powershell
 python run_standalone.py
-# benchmark one-point comparison
+python run_standalone.py --mode menu
+python run_standalone.py --mode core
 python run_standalone.py --mode benchmark-point
-# benchmark full-surface export
 python run_standalone.py --mode benchmark-surface
 python run_standalone.py --mode replication
 python run_standalone.py --mode replication --skip-figures
@@ -192,16 +207,16 @@ python run_standalone.py --mode open-report --replication-report path/to/replica
 
 ```bash
 python3 run_standalone.py
-# benchmark one-point comparison
+python3 run_standalone.py --mode menu
+python3 run_standalone.py --mode core
 python3 run_standalone.py --mode benchmark-point
-# benchmark full-surface export
 python3 run_standalone.py --mode benchmark-surface
 python3 run_standalone.py --mode replication
 python3 run_standalone.py --mode replication --skip-figures
 python3 run_standalone.py --mode open-report
 ```
 
-The script runs `pip install -e .`, then either calls `cfft_bsde.cli.main()` with preset argv (`core`, `benchmark-point`, `benchmark-surface`) or uses `cfft_bsde.replication_pipeline` / `cfft_bsde.replication_report` for `replication` / `open-report`.
+The script runs `pip install -e .`, then uses `cfft_bsde.interactive_menu` for **`auto`**/**`menu`**, `cfft_bsde.replication_pipeline` / `cfft_bsde.replication_report` for **`replication`** / **`open-report`**, or **`cfft_bsde.cli.main()`** with preset argv for **`core`** and benchmark modes.
 
 `benchmark-point` / `benchmark-surface` write to `results/numerical_results_quick.csv` and `results/numerical_results_surface_quick.csv` respectively (same grids as the committed replication smoke run).
 

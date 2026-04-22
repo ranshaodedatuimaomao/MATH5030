@@ -161,6 +161,7 @@
   <table>
     <thead><tr><th>Goal</th><th>Console</th><th>Standalone</th></tr></thead>
     <tbody>
+      <tr><td>Interactive menu (open / replicate / core demo)</td><td><code>cfft-bsde</code> or <code>python -m cfft_bsde.cli --menu</code></td><td><code>python run_standalone.py</code> (<code>--mode auto</code>, default) or <code>--mode menu</code></td></tr>
       <tr><td>Rerun CSVs + figures</td><td><code>python -m cfft_bsde.cli --run-replication</code></td><td><code>python run_standalone.py --mode replication</code></td></tr>
       <tr><td>Rerun CSVs only</td><td><code>python -m cfft_bsde.cli --run-replication --skip-figures</code></td><td><code>python run_standalone.py --mode replication --skip-figures</code></td></tr>
       <tr><td>Open this report</td><td><code>python -m cfft_bsde.cli --open-replication-report</code></td><td><code>python run_standalone.py --mode open-report</code></td></tr>
@@ -189,7 +190,7 @@ python -m cfft_bsde.plot_paper_figures --surface-csv results/numerical_results_s
   <p>Each benchmark row includes Black–Scholes reference prices/deltas, CFFT values, and absolute or relative errors; see the package driver <code>cfft_bsde.benchmark_driver</code> for the authoritative field list.</p>
 
   <footer>
-    Generated as a static companion to the repository artifacts. Branch: <code>replication-html-report</code>.
+    Generated as a static companion to the repository artifacts; see the repository README for current CLI and standalone options.
   </footer>
 </body>
 </html>

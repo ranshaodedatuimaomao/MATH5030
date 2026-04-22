@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -86,6 +87,12 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cfft-bsde",
         description="Run the core CFFT-BSDE algorithm.",
+    )
+    parser.add_argument(
+        "--menu",
+        action="store_true",
+        help="Show interactive menu (open report / run replication / core demo). "
+        "Same menu runs when you launch with no arguments in a terminal.",
     )
 
     parser.add_argument("--spot", type=float, default=100.0, help="Initial spot level")
@@ -187,8 +194,26 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> None:
+    argv_list = list(sys.argv[1:] if argv is None else argv)
+
+    if len(argv_list) == 0 and sys.stdin.isatty():
+        from cfft_bsde.interactive_menu import run_replication_menu
+
+        raise SystemExit(run_replication_menu())
+
     parser = _build_parser()
     args = parser.parse_args(argv)
+
+    if args.menu:
+        if argv_list != ["--menu"]:
+            parser.error("--menu must be the only argument (in a terminal, run with no arguments for the same menu)")
+        if args.benchmark_compare or args.run_replication or args.open_replication_report:
+            parser.error("--menu cannot be combined with --benchmark-compare, --run-replication, or --open-replication-report")
+        if args.skip_figures:
+            parser.error("--menu cannot be combined with --skip-figures")
+        from cfft_bsde.interactive_menu import run_replication_menu
+
+        raise SystemExit(run_replication_menu())
 
     if args.skip_figures and not args.run_replication:
         parser.error("--skip-figures is only valid together with --run-replication")
