@@ -53,7 +53,7 @@ def _preset_args(mode: str) -> list[str]:
         return [
             "--benchmark-compare",
             "--benchmark-methods",
-            "boundary_control,old_2017",
+            "new_boundary_control,legacy_hyndman_2017",
             "--benchmark-model",
             "black_scholes_call",
             "--benchmark-n-values",
@@ -68,7 +68,7 @@ def _preset_args(mode: str) -> list[str]:
     return [
         "--benchmark-compare",
         "--benchmark-methods",
-        "boundary_control,old_2017",
+        "new_boundary_control,legacy_hyndman_2017",
         "--benchmark-model",
         "black_scholes_call",
         "--benchmark-full-surface",

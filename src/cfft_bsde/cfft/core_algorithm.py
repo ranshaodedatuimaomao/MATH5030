@@ -12,7 +12,7 @@ from typing import Callable
 
 RealFunc = Callable[[float], float]
 DriverFunc = Callable[[float, float, float, float], float]
-MethodName = Literal["boundary_control", "old_2017"]
+MethodName = Literal["new_boundary_control", "legacy_hyndman_2017"]
 
 
 @dataclass(frozen=True)
@@ -308,7 +308,7 @@ def run_backward_core(
     inputs: CoreInputs,
     x_center: float,
     enforce_positivity: bool = False,
-    method: MethodName = "boundary_control",
+    method: MethodName = "new_boundary_control",
 ) -> tuple[CoreGrids, SolverState]:
     """Run the core backward CFFT recursion."""
 
@@ -319,7 +319,7 @@ def run_backward_core(
 
     for time_idx in range(len(grids.t) - 2, -1, -1):
         time_value = grids.t[time_idx]
-        if method == "old_2017":
+        if method == "legacy_hyndman_2017":
             damping_alpha = _suggest_adaptive_alpha(
                 grids.x,
                 state.y[time_idx + 1],
@@ -336,7 +336,7 @@ def run_backward_core(
             sigma=sigma_value,
         )
         y_next = state.y[time_idx + 1]
-        if method == "old_2017":
+        if method == "legacy_hyndman_2017":
             shift_params = solve_linear_shift_params(grids.x, y_next, alpha=damping_alpha, dx=grids.dx)
         else:
             shift_params = solve_shift_params(grids.x, y_next, alpha=damping_alpha, dx=grids.dx)
@@ -344,7 +344,7 @@ def run_backward_core(
 
         y_tilde: list[complex] = []
         for space_idx, x_value in enumerate(grids.x):
-            if method == "old_2017":
+            if method == "legacy_hyndman_2017":
                 shifted_value = shift_params.a * x_value + shift_params.b
             else:
                 shifted_value = shift_params.a * cmath.exp(x_value).real + shift_params.b
@@ -360,7 +360,7 @@ def run_backward_core(
         z_current: list[float] = []
         for space_idx, x_value in enumerate(grids.x):
             undamped_value = cmath.exp(-damping_alpha * x_value).real
-            if method == "old_2017":
+            if method == "legacy_hyndman_2017":
                 y_pre = undamped_value * y_conv[space_idx].real + shift_params.a * x_value + shift_params.b
                 z_pre = undamped_value * z_conv[space_idx].real
             else:
@@ -388,7 +388,7 @@ def solve_core(
     inputs: CoreInputs,
     x_center: float,
     enforce_positivity: bool = False,
-    method: MethodName = "boundary_control",
+    method: MethodName = "new_boundary_control",
 ) -> CoreSolution:
     """Public core-only solve API."""
 

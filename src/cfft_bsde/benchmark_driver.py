@@ -57,7 +57,7 @@ def parse_csv_floats(raw: str) -> tuple[float, ...]:
 
 def parse_methods(raw: str) -> tuple[MethodName, ...]:
     values = tuple(token.strip() for token in raw.split(",") if token.strip())
-    allowed = {"boundary_control", "old_2017"}
+    allowed = {"new_boundary_control", "legacy_hyndman_2017"}
     invalid = [value for value in values if value not in allowed]
     if invalid:
         raise ValueError(f"Unknown methods: {', '.join(invalid)}")
