@@ -12,6 +12,9 @@ license = { text = "UNLICENSED" }
 authors = [{ name = "qingp" }]
 dependencies = []
 
+[project.optional-dependencies]
+plot = ["matplotlib>=3.8"]
+
 [project.scripts]
 cfft-bsde = "cfft_bsde.cli:main"
 

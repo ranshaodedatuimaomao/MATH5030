@@ -47,6 +47,8 @@ This repo currently includes small benchmark exports committed under `results/`:
 - `results/numerical_results_surface_quick.csv`: the same benchmark metrics evaluated on a spot grid from 60 to 140 (41 points), intended to sanity-check boundary behavior quickly.
 - `results/benchmark_smoke.csv`: minimal two-row smoke file (one solve per method) using the same `method` labels as the CLI.
 
+PNG plots derived from these runs (paper-style layout) live in the same folder; see **Paper-style replication figures (PNG)** below.
+
 Each row includes (among others) Black–Scholes reference values and errors:
 
 - `price_benchmark`, `price_cfft`, `abs_price_err`
@@ -63,6 +65,33 @@ These settings are **not** the fine grids used in `paper.pdf`; treat the numbers
 | `results/numerical_results_surface_quick.csv` (41 rows each) | mean `abs_price_err` ≈ 13.79 (max ≈ 42.39); mean `abs_delta_z_err` ≈ 0.511 (max ≈ 0.957) | mean `abs_price_err` ≈ 11.56 (max ≈ 38.43); mean `abs_delta_z_err` ≈ 2.55 (max ≈ 2.74) |
 
 To move toward `paper.pdf`-scale replication, increase `--benchmark-n-values`, `--benchmark-l-values`, and `--benchmark-grid-values` (expect substantially longer runtimes).
+
+## Paper-style replication figures (PNG)
+
+Section 4 of `paper.pdf` shows call **price** and **delta** errors as a function of spot (Figures 1–2) and a **delta surface** over time and spot (Figure 3). This repo includes a small plotting helper that mirrors that layout using:
+
+- **Figures 1–2**: curves read from a full-spot benchmark CSV (by default `results/numerical_results_surface_quick.csv`).
+- **Figure 3**: a fresh `solve_core` run for `new_boundary_control` (same spirit as the paper’s surface plot; grid is controlled by CLI flags below).
+
+Install Matplotlib (not required for the core solver), then run:
+
+```powershell
+python -m pip install matplotlib
+python -m cfft_bsde.plot_paper_figures --surface-csv results/numerical_results_surface_quick.csv --output-dir results
+```
+
+Optional editable install with plotting extras:
+
+```powershell
+python -m pip install -e ".[plot]"
+python -m cfft_bsde.plot_paper_figures
+```
+
+Generated files (also committed under `results/` when present):
+
+- `results/figure_01_legacy_price_delta_errors.png`
+- `results/figure_02_new_boundary_price_delta_errors.png`
+- `results/figure_03_new_boundary_delta_surface.png`
 
 ## Simple Python Console App
 
