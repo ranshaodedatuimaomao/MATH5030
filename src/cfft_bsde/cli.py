@@ -83,38 +83,6 @@ def _run_core(args: argparse.Namespace) -> None:
     print(f"Z(0, x0) ~= {z0:.6f}")
 
 
-def _interactive_replication_menu() -> int:
-    """Prompt for replication actions or a core demo. Returns a process exit code."""
-
-    print("cfft-bsde - choose an action:\n")
-    print("  1) Open existing replication report (results/replication_report.html in browser)")
-    print("  2) Run full replication (regenerate quick + surface CSVs, then paper-style PNGs)")
-    print("  3) Run one core solve demo (default non-interactive behavior)")
-    print("  q) Quit\n")
-
-    while True:
-        choice = input("Enter 1, 2, 3, or q: ").strip().lower()
-        if choice in ("q", "quit", ""):
-            print("Exiting.")
-            return 0
-        if choice == "1":
-            from cfft_bsde.replication_report import open_replication_report_html
-
-            return open_replication_report_html(None)
-        if choice == "2":
-            skip = input("Skip matplotlib figures (CSVs only)? [y/N]: ").strip().lower()
-            from cfft_bsde.replication_pipeline import run_full_replication
-
-            run_full_replication(extra_tail=[], skip_figures=skip in ("y", "yes"))
-            return 0
-        if choice == "3":
-            parser = _build_parser()
-            demo_args = parser.parse_args([])
-            _run_core(demo_args)
-            return 0
-        print("Invalid choice; try again.\n")
-
-
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cfft-bsde",
@@ -229,7 +197,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     argv_list = list(sys.argv[1:] if argv is None else argv)
 
     if len(argv_list) == 0 and sys.stdin.isatty():
-        raise SystemExit(_interactive_replication_menu())
+        from cfft_bsde.interactive_menu import run_replication_menu
+
+        raise SystemExit(run_replication_menu())
 
     parser = _build_parser()
     args = parser.parse_args(argv)
@@ -241,7 +211,9 @@ def main(argv: Sequence[str] | None = None) -> None:
             parser.error("--menu cannot be combined with --benchmark-compare, --run-replication, or --open-replication-report")
         if args.skip_figures:
             parser.error("--menu cannot be combined with --skip-figures")
-        raise SystemExit(_interactive_replication_menu())
+        from cfft_bsde.interactive_menu import run_replication_menu
+
+        raise SystemExit(run_replication_menu())
 
     if args.skip_figures and not args.run_replication:
         parser.error("--skip-figures is only valid together with --run-replication")

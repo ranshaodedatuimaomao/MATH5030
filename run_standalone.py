@@ -1,14 +1,12 @@
 """
 Standalone launcher:
 1) installs this package from the local repo
-2) imports and runs the console app in selectable modes
+2) runs a preset or the same interactive menu as ``cfft-bsde`` (when appropriate)
 
-Two replication-focused modes:
-
-- ``--mode replication`` — rerun the full replication (CSVs + figures), same as ``cfft-bsde --run-replication``.
-- ``--mode open-report`` — open the existing ``results/replication_report.html`` in the default browser.
-
-``benchmark-point`` / ``benchmark-surface`` use the same argv presets as the replication pipeline.
+Default ``--mode auto`` (interactive terminal): same menu as the console app
+(open HTML report / run replication / core demo). Use ``--mode menu`` to force
+that menu even when stdin is not a TTY. Non-interactive ``auto`` falls back to
+``--mode core``. Explicit modes match the CLI flags (replication, open-report, etc.).
 """
 
 from __future__ import annotations
@@ -32,12 +30,21 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--mode",
-        choices=["core", "benchmark-point", "benchmark-surface", "replication", "open-report"],
-        default="core",
+        choices=[
+            "auto",
+            "menu",
+            "core",
+            "benchmark-point",
+            "benchmark-surface",
+            "replication",
+            "open-report",
+        ],
+        default="auto",
         help=(
-            "Preset: core (single solve); benchmark-point / benchmark-surface (CSV exports only); "
-            "replication (rerun full pipeline: both CSVs + paper-style PNG figures); "
-            "open-report (open existing results/replication_report.html in a browser)."
+            "auto: in a terminal, same interactive menu as cfft-bsde with no args; "
+            "else preset core. "
+            "menu: always show that menu. "
+            "Other modes: core solve, benchmark CSV presets, full replication, or open HTML report."
         ),
     )
     parser.add_argument(
@@ -45,7 +52,7 @@ def _build_parser() -> argparse.ArgumentParser:
         type=str,
         nargs="*",
         default=[],
-        help="Additional raw CLI args appended to each benchmark/core invocation (optional)",
+        help="Additional raw CLI args appended to each benchmark/core invocation (optional; not used with auto/menu)",
     )
     parser.add_argument(
         "--skip-figures",
@@ -90,6 +97,28 @@ def main(argv: list[str] | None = None) -> None:
     if args.skip_figures and args.mode != "replication":
         print("--skip-figures is only valid with --mode replication", file=sys.stderr)
         raise SystemExit(2)
+
+    if args.mode in ("auto", "menu"):
+        if args.extra_cli_args or passthrough:
+            print(
+                "Do not use --extra-cli-args with --mode auto or menu; "
+                "pick an explicit --mode (e.g. core, replication) instead.",
+                file=sys.stderr,
+            )
+            raise SystemExit(2)
+        if args.mode == "menu" or (args.mode == "auto" and sys.stdin.isatty()):
+            from cfft_bsde.interactive_menu import run_replication_menu
+
+            raise SystemExit(
+                run_replication_menu(
+                    title="run_standalone (after pip install -e .)",
+                    extra_report_roots=(repo_root,),
+                )
+            )
+        from cfft_bsde.cli import main as cli_main
+
+        cli_main(_preset_args("core"))
+        return
 
     if args.mode == "replication":
         from cfft_bsde.replication_pipeline import run_full_replication
