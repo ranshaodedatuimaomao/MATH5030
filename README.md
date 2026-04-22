@@ -18,6 +18,12 @@ Brief implementation flow:
 Main implementation: `src/cfft_bsde/cfft/core_algorithm.py`  
 Console entrypoint: `src/cfft_bsde/cli.py`
 
+### Interactive menu (terminal)
+
+From an **interactive terminal**, run **`cfft-bsde`**, **`python -m cfft_bsde.cli`**, or **`python app.py`** with **no extra arguments** to get a short prompt: open the existing replication HTML, run full replication, or run a one-off core demo. The same menu appears if you pass **`--menu`** (useful when stdin is not a TTY but you still want the prompt).
+
+If **stdin is not a terminal** (pipelines, CI), an empty command line still runs a **single core solve** so automation keeps working.
+
 Method variants exposed by CLI (CSV `method` column uses the same strings):
 
 - **`new_boundary_control`** (default): boundary-error control scheme from the course paper—fixed damping plus a time-varying exponential shift `h(x)=A*exp(x)+B` with recovery terms.
@@ -123,6 +129,8 @@ python -m pip install -r requirements.txt
 python app.py
 ```
 
+In a normal terminal window, `python app.py` with no arguments opens the **interactive menu** (see **Interactive menu (terminal)** above).
+
 ### macOS
 
 1) Install Python 3:
@@ -136,6 +144,8 @@ python3 --version
 python3 -m pip install -r requirements.txt
 python3 app.py
 ```
+
+In a normal terminal, `python3 app.py` with no arguments opens the **interactive menu**.
 
 ## Install as a package (pip)
 
