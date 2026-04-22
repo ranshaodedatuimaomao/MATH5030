@@ -35,6 +35,32 @@ Benchmark comparison mode:
 - Optional full-surface mode (keeps default one-point mode unless enabled):
   - `python -m cfft_bsde.cli --benchmark-compare --benchmark-full-surface --surface-spot-min 60 --surface-spot-max 140 --surface-spot-points 81 --benchmark-output "results/benchmark_surface.csv"`
 
+## Numerical benchmark outputs (CSV)
+
+When you run `--benchmark-compare`, results are written to the path you pass via `--benchmark-output` (relative paths land under the repo root).
+
+This repo currently includes two small, fast benchmark exports committed under `results/`:
+
+- `results/numerical_results_quick.csv`: one-point (`spot_eval = 100`) sweep over a coarse grid intended for quick smoke testing.
+- `results/numerical_results_surface_quick.csv`: the same benchmark metrics evaluated on a spot grid from 60 to 140 (41 points), intended to sanity-check boundary behavior quickly.
+
+Each row includes (among others) Black–Scholes reference values and errors:
+
+- `price_benchmark`, `price_cfft`, `abs_price_err`
+- `delta_benchmark`, `delta_z`, `abs_delta_z_err`, `rel_delta_z_err`
+- `delta_fd`, `abs_delta_fd_err`, `rel_delta_fd_err`
+
+### Snapshot summary (the two quick CSVs above)
+
+These settings are **not** the fine grids used in `paper.pdf`; treat the numbers below as **smoke-test scale**, useful mainly to confirm the pipeline runs and to compare methods on identical inputs.
+
+| CSV | `boundary_control` | `old_2017` |
+| --- | --- | --- |
+| `results/numerical_results_quick.csv` (8 rows each) | mean `abs_price_err` ≈ 9.13 (max ≈ 9.41); mean `abs_delta_z_err` ≈ 0.557 (max ≈ 0.559) | mean `abs_price_err` ≈ 2475.88 (max ≈ 5824.38); mean `abs_delta_z_err` ≈ 7.28 (max ≈ 25.60) |
+| `results/numerical_results_surface_quick.csv` (41 rows each) | mean `abs_price_err` ≈ 13.79 (max ≈ 42.39); mean `abs_delta_z_err` ≈ 0.511 (max ≈ 0.957) | mean `abs_price_err` ≈ 11.56 (max ≈ 38.43); mean `abs_delta_z_err` ≈ 2.55 (max ≈ 2.74) |
+
+To move toward `paper.pdf`-scale replication, increase `--benchmark-n-values`, `--benchmark-l-values`, and `--benchmark-grid-values` (expect substantially longer runtimes).
+
 ## Simple Python Console App
 
 ### Windows
