@@ -109,6 +109,18 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Apply max(Y,0) clamp in each backward step",
     )
     parser.add_argument(
+        "--open-replication-report",
+        action="store_true",
+        help="Open results/replication_report.html in the default browser and exit (no solve)",
+    )
+    parser.add_argument(
+        "--replication-report",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="Explicit path to replication_report.html (optional; used with --open-replication-report)",
+    )
+    parser.add_argument(
         "--benchmark-compare",
         action="store_true",
         help="Run benchmark comparison for selected methods and write CSV",
@@ -163,6 +175,11 @@ def _build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> None:
     parser = _build_parser()
     args = parser.parse_args(argv)
+    if args.open_replication_report:
+        from cfft_bsde.replication_report import open_replication_report_html
+
+        raise SystemExit(open_replication_report_html(args.replication_report))
+
     args.benchmark_output = Path(args.benchmark_output)
     if args.benchmark_compare:
         _run_benchmark_comparison(args)

@@ -36,6 +36,9 @@ Benchmark comparison mode:
   - `python -m cfft_bsde.cli --benchmark-compare --benchmark-methods "new_boundary_control,legacy_hyndman_2017" --benchmark-model "black_scholes_call" --benchmark-n-values "1000,2000" --benchmark-l-values "10,12,14" --benchmark-grid-values "1024,2048" --benchmark-output "results/benchmark.csv"`
 - Optional full-surface mode (keeps default one-point mode unless enabled):
   - `python -m cfft_bsde.cli --benchmark-compare --benchmark-full-surface --surface-spot-min 60 --surface-spot-max 140 --surface-spot-points 81 --benchmark-output "results/benchmark_surface.csv"`
+- Open the static HTML replication summary in your default browser (no solve):
+  - `python -m cfft_bsde.cli --open-replication-report`
+  - Optional explicit file: `python -m cfft_bsde.cli --open-replication-report --replication-report path/to/replication_report.html`
 
 ## Numerical benchmark outputs (CSV)
 
@@ -46,6 +49,7 @@ This repo currently includes small benchmark exports committed under `results/`:
 - `results/numerical_results_quick.csv`: one-point (`spot_eval = 100`) sweep over a coarse grid intended for quick smoke testing.
 - `results/numerical_results_surface_quick.csv`: the same benchmark metrics evaluated on a spot grid from 60 to 140 (41 points), intended to sanity-check boundary behavior quickly.
 - `results/benchmark_smoke.csv`: minimal two-row smoke file (one solve per method) using the same `method` labels as the CLI.
+- `results/replication_report.html`: short HTML summary of the replication bundle (CSVs + figures). Open it with `python -m cfft_bsde.cli --open-replication-report` from the repo root, or `python run_standalone.py --mode open-report`.
 
 PNG plots derived from these runs (paper-style layout) live in the same folder; see **Paper-style replication figures (PNG)** below.
 
@@ -133,6 +137,8 @@ This repo is now a Python package (`cfft-bsde`) with an import name `cfft_bsde` 
 python -m pip install -U pip
 python -m pip install -e .
 cfft-bsde
+# open bundled replication summary in default browser (from repo root)
+cfft-bsde --open-replication-report
 ```
 
 ### macOS
@@ -141,6 +147,7 @@ cfft-bsde
 python3 -m pip install -U pip
 python3 -m pip install -e .
 cfft-bsde
+cfft-bsde --open-replication-report
 ```
 
 ## Standalone launcher script
@@ -159,6 +166,10 @@ python run_standalone.py --mode benchmark-surface
 python run_standalone.py --mode replication
 # same CSV steps only (skip matplotlib)
 python run_standalone.py --mode replication --skip-figures
+# open results/replication_report.html (after pip install -e .)
+python run_standalone.py --mode open-report
+# optional explicit HTML path
+python run_standalone.py --mode open-report --replication-report path/to/replication_report.html
 ```
 
 ### macOS
@@ -172,9 +183,10 @@ python3 run_standalone.py --mode benchmark-surface
 # full replication bundle (CSVs + paper-style PNGs; needs matplotlib for figures)
 python3 run_standalone.py --mode replication
 python3 run_standalone.py --mode replication --skip-figures
+python3 run_standalone.py --mode open-report
 ```
 
-The script runs `pip install -e .`, then imports and executes `cfft_bsde.cli.main()` (or, for `--mode replication`, runs the point benchmark, surface benchmark, then `cfft_bsde.plot_paper_figures` when Matplotlib is available).
+The script runs `pip install -e .`, then imports and executes `cfft_bsde.cli.main()` (or, for `--mode replication`, runs the point benchmark, surface benchmark, then `cfft_bsde.plot_paper_figures` when Matplotlib is available). Use `--mode open-report` to open `results/replication_report.html` via the same discovery logic as `cfft-bsde --open-replication-report`.
 
 `benchmark-point` / `benchmark-surface` write to `results/numerical_results_quick.csv` and `results/numerical_results_surface_quick.csv` respectively (same grids as the committed replication smoke run).
 

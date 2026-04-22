@@ -47,11 +47,12 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--mode",
-        choices=["core", "benchmark-point", "benchmark-surface", "replication"],
+        choices=["core", "benchmark-point", "benchmark-surface", "replication", "open-report"],
         default="core",
         help=(
             "Preset: core (single solve); benchmark-point / benchmark-surface (CSV exports); "
-            "replication (full pipeline: both CSVs + paper-style PNG figures)."
+            "replication (full pipeline: both CSVs + paper-style PNG figures); "
+            "open-report (open results/replication_report.html in a browser)."
         ),
     )
     parser.add_argument(
@@ -65,6 +66,13 @@ def _build_parser() -> argparse.ArgumentParser:
         "--skip-figures",
         action="store_true",
         help="With --mode replication: only regenerate CSV benchmarks, skip matplotlib figures",
+    )
+    parser.add_argument(
+        "--replication-report",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="With --mode open-report: explicit path to replication_report.html (optional)",
     )
     return parser
 
@@ -171,7 +179,8 @@ def _run_replication(
         "  PNG:  results/figure_01_legacy_price_delta_errors.png\n"
         "        results/figure_02_new_boundary_price_delta_errors.png\n"
         "        results/figure_03_new_boundary_delta_surface.png\n"
-        "  HTML: results/replication_report.html (static; open in a browser)\n"
+        "  HTML: results/replication_report.html (open with: cfft-bsde --open-replication-report\n"
+        "        or: python run_standalone.py --mode open-report)\n"
     )
 
 
@@ -187,6 +196,15 @@ def main(argv: list[str] | None = None) -> None:
             skip_figures=args.skip_figures,
         )
         return
+
+    if args.mode == "open-report":
+        from cfft_bsde.replication_report import open_replication_report_html
+
+        code = open_replication_report_html(
+            args.replication_report,
+            extra_search_roots=[repo_root],
+        )
+        raise SystemExit(code)
 
     from cfft_bsde.cli import main as cli_main
 
