@@ -155,6 +155,10 @@ python run_standalone.py
 python run_standalone.py --mode benchmark-point
 # benchmark full-surface export
 python run_standalone.py --mode benchmark-surface
+# full replication bundle (CSVs + paper-style PNGs; needs matplotlib for figures)
+python run_standalone.py --mode replication
+# same CSV steps only (skip matplotlib)
+python run_standalone.py --mode replication --skip-figures
 ```
 
 ### macOS
@@ -165,10 +169,16 @@ python3 run_standalone.py
 python3 run_standalone.py --mode benchmark-point
 # benchmark full-surface export
 python3 run_standalone.py --mode benchmark-surface
+# full replication bundle (CSVs + paper-style PNGs; needs matplotlib for figures)
+python3 run_standalone.py --mode replication
+python3 run_standalone.py --mode replication --skip-figures
 ```
 
-The script runs `pip install -e .`, then imports and executes `cfft_bsde.cli.main()`.
-Use `--extra-cli-args` to append any additional CLI flags.
+The script runs `pip install -e .`, then imports and executes `cfft_bsde.cli.main()` (or, for `--mode replication`, runs the point benchmark, surface benchmark, then `cfft_bsde.plot_paper_figures` when Matplotlib is available).
+
+`benchmark-point` / `benchmark-surface` write to `results/numerical_results_quick.csv` and `results/numerical_results_surface_quick.csv` respectively (same grids as the committed replication smoke run).
+
+Use `--extra-cli-args` to append any additional CLI flags (each benchmark step in `replication` receives the same extras).
 
 ### Notes
 
