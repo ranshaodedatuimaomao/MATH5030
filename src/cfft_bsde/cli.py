@@ -108,7 +108,21 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Apply max(Y,0) clamp in each backward step",
     )
-    parser.add_argument(
+    rep_mode = parser.add_mutually_exclusive_group()
+    rep_mode.add_argument(
+        "--benchmark-compare",
+        action="store_true",
+        help="Run a single custom benchmark comparison (see benchmark-* flags) and write CSV",
+    )
+    rep_mode.add_argument(
+        "--run-replication",
+        action="store_true",
+        help=(
+            "Rerun the full bundled replication: results/numerical_results_quick.csv, "
+            "results/numerical_results_surface_quick.csv, then paper-style PNGs (unless --skip-figures)"
+        ),
+    )
+    rep_mode.add_argument(
         "--open-replication-report",
         action="store_true",
         help="Open results/replication_report.html in the default browser and exit (no solve)",
@@ -121,9 +135,9 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Explicit path to replication_report.html (optional; used with --open-replication-report)",
     )
     parser.add_argument(
-        "--benchmark-compare",
+        "--skip-figures",
         action="store_true",
-        help="Run benchmark comparison for selected methods and write CSV",
+        help="Only with --run-replication: regenerate CSVs only, skip matplotlib figures",
     )
     parser.add_argument(
         "--benchmark-methods",
@@ -175,10 +189,20 @@ def _build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> None:
     parser = _build_parser()
     args = parser.parse_args(argv)
+
+    if args.skip_figures and not args.run_replication:
+        parser.error("--skip-figures is only valid together with --run-replication")
+
     if args.open_replication_report:
         from cfft_bsde.replication_report import open_replication_report_html
 
         raise SystemExit(open_replication_report_html(args.replication_report))
+
+    if args.run_replication:
+        from cfft_bsde.replication_pipeline import run_full_replication
+
+        run_full_replication(extra_tail=[], skip_figures=args.skip_figures)
+        return
 
     args.benchmark_output = Path(args.benchmark_output)
     if args.benchmark_compare:
