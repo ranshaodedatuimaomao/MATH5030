@@ -99,9 +99,9 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--alpha", type=float, default=-1.5, help="Damping alpha (<0)")
     parser.add_argument(
         "--method",
-        choices=["boundary_control", "old_2017"],
-        default="boundary_control",
-        help="Numerical method variant to run",
+        choices=["new_boundary_control", "legacy_hyndman_2017"],
+        default="new_boundary_control",
+        help="Numerical method variant: new_boundary_control (boundary error control) or legacy_hyndman_2017 (2017 convolution scheme)",
     )
     parser.add_argument(
         "--enforce-positivity",
@@ -111,12 +111,12 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--benchmark-compare",
         action="store_true",
-        help="Run benchmark comparison for boundary_control vs old_2017 and write CSV",
+        help="Run benchmark comparison for selected methods and write CSV",
     )
     parser.add_argument(
         "--benchmark-methods",
         type=str,
-        default="boundary_control,old_2017",
+        default="new_boundary_control,legacy_hyndman_2017",
         help="Comma-separated methods to compare",
     )
     parser.add_argument(

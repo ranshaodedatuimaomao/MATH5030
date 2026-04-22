@@ -18,10 +18,12 @@ Brief implementation flow:
 Main implementation: `src/cfft_bsde/cfft/core_algorithm.py`  
 Console entrypoint: `src/cfft_bsde/cli.py`
 
-Method variants exposed by CLI:
+Method variants exposed by CLI (CSV `method` column uses the same strings):
 
-- `boundary_control` (default): fixed damping + time-dependent exponential shift.
-- `old_2017`: legacy-style path with adaptive damping heuristic + linear shift.
+- **`new_boundary_control`** (default): boundary-error control scheme from the course paper—fixed damping plus a time-varying exponential shift `h(x)=A*exp(x)+B` with recovery terms.
+- **`legacy_hyndman_2017`**: legacy convolution–FFT path after Hyndman and Oyono Ngou (2017)—adaptive damping heuristic and a **linear** shift `h(x)=a*x+b`.
+
+(Older identifiers were `boundary_control` and `old_2017`; they are removed in favor of the names above.)
 
 Benchmark comparison mode:
 
@@ -31,7 +33,7 @@ Benchmark comparison mode:
   - `black_scholes_call` (default)
   - `intrinsic_call`
 - Example:
-  - `python -m cfft_bsde.cli --benchmark-compare --benchmark-methods "boundary_control,old_2017" --benchmark-model "black_scholes_call" --benchmark-n-values "1000,2000" --benchmark-l-values "10,12,14" --benchmark-grid-values "1024,2048" --benchmark-output "results/benchmark.csv"`
+  - `python -m cfft_bsde.cli --benchmark-compare --benchmark-methods "new_boundary_control,legacy_hyndman_2017" --benchmark-model "black_scholes_call" --benchmark-n-values "1000,2000" --benchmark-l-values "10,12,14" --benchmark-grid-values "1024,2048" --benchmark-output "results/benchmark.csv"`
 - Optional full-surface mode (keeps default one-point mode unless enabled):
   - `python -m cfft_bsde.cli --benchmark-compare --benchmark-full-surface --surface-spot-min 60 --surface-spot-max 140 --surface-spot-points 81 --benchmark-output "results/benchmark_surface.csv"`
 
@@ -39,10 +41,11 @@ Benchmark comparison mode:
 
 When you run `--benchmark-compare`, results are written to the path you pass via `--benchmark-output` (relative paths land under the repo root).
 
-This repo currently includes two small, fast benchmark exports committed under `results/`:
+This repo currently includes small benchmark exports committed under `results/`:
 
 - `results/numerical_results_quick.csv`: one-point (`spot_eval = 100`) sweep over a coarse grid intended for quick smoke testing.
 - `results/numerical_results_surface_quick.csv`: the same benchmark metrics evaluated on a spot grid from 60 to 140 (41 points), intended to sanity-check boundary behavior quickly.
+- `results/benchmark_smoke.csv`: minimal two-row smoke file (one solve per method) using the same `method` labels as the CLI.
 
 Each row includes (among others) Black–Scholes reference values and errors:
 
@@ -54,7 +57,7 @@ Each row includes (among others) Black–Scholes reference values and errors:
 
 These settings are **not** the fine grids used in `paper.pdf`; treat the numbers below as **smoke-test scale**, useful mainly to confirm the pipeline runs and to compare methods on identical inputs.
 
-| CSV | `boundary_control` | `old_2017` |
+| CSV | `new_boundary_control` | `legacy_hyndman_2017` |
 | --- | --- | --- |
 | `results/numerical_results_quick.csv` (8 rows each) | mean `abs_price_err` ≈ 9.13 (max ≈ 9.41); mean `abs_delta_z_err` ≈ 0.557 (max ≈ 0.559) | mean `abs_price_err` ≈ 2475.88 (max ≈ 5824.38); mean `abs_delta_z_err` ≈ 7.28 (max ≈ 25.60) |
 | `results/numerical_results_surface_quick.csv` (41 rows each) | mean `abs_price_err` ≈ 13.79 (max ≈ 42.39); mean `abs_delta_z_err` ≈ 0.511 (max ≈ 0.957) | mean `abs_price_err` ≈ 11.56 (max ≈ 38.43); mean `abs_delta_z_err` ≈ 2.55 (max ≈ 2.74) |
