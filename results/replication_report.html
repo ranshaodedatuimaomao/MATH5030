@@ -156,8 +156,17 @@
     </figure>
   </div>
 
-  <h2>5. How to regenerate</h2>
-  <p>Install the package, rerun benchmarks, then rebuild figures.</p>
+  <h2>5. How to regenerate or open</h2>
+  <p>Two entry points (after <code>pip install -e .</code>): rerun the full replication bundle, or only open this HTML file.</p>
+  <table>
+    <thead><tr><th>Goal</th><th>Console</th><th>Standalone</th></tr></thead>
+    <tbody>
+      <tr><td>Rerun CSVs + figures</td><td><code>python -m cfft_bsde.cli --run-replication</code></td><td><code>python run_standalone.py --mode replication</code></td></tr>
+      <tr><td>Rerun CSVs only</td><td><code>python -m cfft_bsde.cli --run-replication --skip-figures</code></td><td><code>python run_standalone.py --mode replication --skip-figures</code></td></tr>
+      <tr><td>Open this report</td><td><code>python -m cfft_bsde.cli --open-replication-report</code></td><td><code>python run_standalone.py --mode open-report</code></td></tr>
+    </tbody>
+  </table>
+  <p>Manual steps (equivalent to <code>--run-replication</code> without the one-liner):</p>
   <pre>python -m pip install -e .
 python -m cfft_bsde.cli --benchmark-compare ^
   --benchmark-methods "new_boundary_control,legacy_hyndman_2017" ^
