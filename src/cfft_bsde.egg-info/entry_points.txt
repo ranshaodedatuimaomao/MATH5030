@@ -1,2 +1,0 @@
-[console_scripts]
-cfft-bsde = cfft_bsde.cli:main

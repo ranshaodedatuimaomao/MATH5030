@@ -1,2 +1,3 @@
-# This app uses only Python standard library modules.
-# No external packages are required.
+# Editable: pip install -e .
+# Optional: pip install -e ".[test]"  or  ".[plot]"
+# When implementing, add dependencies to pyproject.toml (see reference repo).
