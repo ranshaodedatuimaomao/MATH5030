@@ -97,18 +97,21 @@
   </table>
 
   <h2>2. Data and figure artifacts</h2>
-  <p>All paths below are relative to the repository root (this file lives in <code>results/</code>).</p>
+  <p>
+    This file lives in <code>bsde_cfft_sv/implementation_version_0/results/</code> (bundled with the package). Paths
+    below are from the <strong>repository root</strong> for a typical checkout; PNGs are written next to this HTML when you regenerate.
+  </p>
   <table>
     <thead>
       <tr><th>Artifact</th><th>Description</th></tr>
     </thead>
     <tbody>
-      <tr><td><code>results/numerical_results_quick.csv</code></td><td>One-point sweep at <code>spot_eval = 100</code>; coarse grid smoke test.</td></tr>
-      <tr><td><code>results/numerical_results_surface_quick.csv</code></td><td>Spot grid 60–140 (41 points); used for paper-style error curves.</td></tr>
-      <tr><td><code>results/benchmark_smoke.csv</code></td><td>Minimal two-row sanity check.</td></tr>
-      <tr><td><code>results/figure_01_legacy_price_delta_errors.png</code></td><td>|Price| and |delta| errors vs spot (legacy).</td></tr>
-      <tr><td><code>results/figure_02_new_boundary_price_delta_errors.png</code></td><td>Same layout for new boundary control.</td></tr>
-      <tr><td><code>results/figure_03_new_boundary_delta_surface.png</code></td><td>Delta heatmap vs (spot, time) from a fresh core solve.</td></tr>
+      <tr><td><code>src/implementation_version_0/results/numerical_results_quick.csv</code></td><td>One-point sweep at <code>spot_eval = 100</code>; coarse grid smoke test.</td></tr>
+      <tr><td><code>src/implementation_version_0/results/numerical_results_surface_quick.csv</code></td><td>Spot grid 60–140 (41 points); used for paper-style error curves.</td></tr>
+      <tr><td><code>src/implementation_version_0/results/benchmark_smoke.csv</code></td><td>Minimal two-row sanity check.</td></tr>
+      <tr><td><code>src/implementation_version_0/results/figure_01_legacy_price_delta_errors.png</code></td><td>|Price| and |delta| errors vs spot (legacy).</td></tr>
+      <tr><td><code>src/implementation_version_0/results/figure_02_new_boundary_price_delta_errors.png</code></td><td>Same layout for new boundary control.</td></tr>
+      <tr><td><code>src/implementation_version_0/results/figure_03_new_boundary_delta_surface.png</code></td><td>Delta heatmap vs (spot, time) from a fresh core solve.</td></tr>
     </tbody>
   </table>
 
@@ -140,7 +143,7 @@
   </table>
 
   <h2>4. Figures (embedded)</h2>
-  <p>Open this HTML from disk with the images alongside it (same <code>results/</code> folder) so relative image paths resolve.</p>
+  <p>Open this HTML from disk with the images alongside it (same <code>implementation_version_0/results</code> folder) so relative image paths resolve.</p>
   <div class="figures">
     <figure>
       <img src="figure_01_legacy_price_delta_errors.png" alt="Legacy method: absolute price and delta errors vs spot" width="640" height="480" loading="lazy" />
@@ -161,33 +164,33 @@
   <table>
     <thead><tr><th>Goal</th><th>Console</th><th>Standalone</th></tr></thead>
     <tbody>
-      <tr><td>Interactive menu (open / replicate / core demo)</td><td><code>cfft-bsde</code> or <code>python -m cfft_bsde.cli --menu</code></td><td><code>python run_standalone.py</code> (<code>--mode auto</code>, default) or <code>--mode menu</code></td></tr>
-      <tr><td>Rerun CSVs + figures</td><td><code>python -m cfft_bsde.cli --run-replication</code></td><td><code>python run_standalone.py --mode replication</code></td></tr>
-      <tr><td>Rerun CSVs only</td><td><code>python -m cfft_bsde.cli --run-replication --skip-figures</code></td><td><code>python run_standalone.py --mode replication --skip-figures</code></td></tr>
-      <tr><td>Open this report</td><td><code>python -m cfft_bsde.cli --open-replication-report</code></td><td><code>python run_standalone.py --mode open-report</code></td></tr>
+      <tr><td>Interactive menu (open / replicate / core demo)</td><td><code>bsde-cfft-sv</code> or <code>python -m bsde_cfft_app</code> (no args in a TTY), or <code>--menu</code></td><td><code>python run_standalone.py</code> (<code>--mode auto</code>, default) or <code>--mode menu</code></td></tr>
+      <tr><td>Rerun CSVs + figures</td><td><code>python -m bsde_cfft_app --run-replication</code></td><td><code>python run_standalone.py --mode replication</code></td></tr>
+      <tr><td>Rerun CSVs only</td><td><code>python -m bsde_cfft_app --run-replication --skip-figures</code></td><td><code>python run_standalone.py --mode replication --skip-figures</code></td></tr>
+      <tr><td>Open this report</td><td><code>python -m bsde_cfft_app --open-replication-report</code></td><td><code>python run_standalone.py --mode open-report</code></td></tr>
     </tbody>
   </table>
   <p>Manual steps (equivalent to <code>--run-replication</code> without the one-liner):</p>
   <pre>python -m pip install -e .
-python -m cfft_bsde.cli --benchmark-compare ^
+python -m bsde_cfft_app --benchmark-compare ^
   --benchmark-methods "new_boundary_control,legacy_hyndman_2017" ^
   --benchmark-model black_scholes_call --spot 100 --strike 100 --rate 0.01 --sigma 0.2 --maturity 1 ^
   --benchmark-n-values "64,128" --benchmark-l-values "10,12" --benchmark-grid-values "128,256" ^
-  --benchmark-output results/numerical_results_quick.csv
+  --benchmark-output src/implementation_version_0/results/numerical_results_quick.csv
 
-python -m cfft_bsde.cli --benchmark-compare ^
+python -m bsde_cfft_app --benchmark-compare ^
   --benchmark-methods "new_boundary_control,legacy_hyndman_2017" ^
   --benchmark-model black_scholes_call --benchmark-full-surface ^
   --surface-spot-min 60 --surface-spot-max 140 --surface-spot-points 41 ^
   --benchmark-n-values 64 --benchmark-l-values 10 --benchmark-grid-values 128 ^
-  --benchmark-output results/numerical_results_surface_quick.csv
+  --benchmark-output src/implementation_version_0/results/numerical_results_surface_quick.csv
 
 python -m pip install matplotlib
-python -m cfft_bsde.plot_paper_figures --surface-csv results/numerical_results_surface_quick.csv --output-dir results</pre>
+python -m bsde_cfft_app.plot_paper_figures --surface-csv src/implementation_version_0/results/numerical_results_surface_quick.csv --output-dir src/implementation_version_0/results</pre>
   <p class="note">On Unix shells, replace caret line continuations (<code>^</code>) with backslashes or single-line commands. For paper-scale grids, increase <code>n</code>, <code>L</code>, and <code>N</code> in the CLI flags and expect much longer runtimes.</p>
 
   <h2>6. Benchmark columns (reference)</h2>
-  <p>Each benchmark row includes Black–Scholes reference prices/deltas, CFFT values, and absolute or relative errors; see the package driver <code>cfft_bsde.benchmark_driver</code> for the authoritative field list.</p>
+  <p>Each benchmark row includes Black–Scholes reference prices/deltas, CFFT values, and absolute or relative errors; see the course driver <code>bsde_cfft_app.benchmark_driver</code> for the authoritative field list.</p>
 
   <footer>
     Generated as a static companion to the repository artifacts; see the repository README for current CLI and standalone options.

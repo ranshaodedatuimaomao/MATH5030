@@ -7,7 +7,7 @@ import math
 import pytest
 
 import bsde_cfft_sv
-from bsde_cfft_sv.implementation_version_0.cfft.core_algorithm import CoreConfig, CoreInputs, solve_core
+from implementation_version_0.cfft.core_algorithm import CoreConfig, CoreInputs, solve_core
 
 
 def test_package_import_and_version():
@@ -15,9 +15,10 @@ def test_package_import_and_version():
     assert hasattr(bsde_cfft_sv, "BSDECFFT1D")
 
 
-def test_stub_api_raises():
-    with pytest.raises(NotImplementedError):
-        bsde_cfft_sv.price_black_scholes_1d()
+def test_price_black_scholes_1d_smoke():
+    result = bsde_cfft_sv.price_black_scholes_1d(n_steps=32, N=256)
+    assert math.isfinite(result.price)
+    assert math.isfinite(result.delta)
 
 
 def test_implementation_version_0_solve_core_smoke():

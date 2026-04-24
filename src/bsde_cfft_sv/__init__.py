@@ -1,4 +1,4 @@
-"""Public API aligned with the upstream ``bsde-cfft-sv`` layout (stubs + course console tooling)."""
+"""Public API for the BSDE-CFFT stochastic-volatility package."""
 
 from __future__ import annotations
 
@@ -23,4 +23,4 @@ __all__ = [
     "run_experiments",
 ]
 
-__version__ = "0.0.0"
+__version__ = "0.1.0"

@@ -1,3 +1,3 @@
-# Editable install (library + console): pip install -e .
+# From repo root: `pip install -e .` → distribution name `bsde-cfft-sv`, imports: bsde_cfft_sv, implementation_version_0, bsde_cfft_app
 # Tests: pip install -e ".[test]"
 # Plots / replication figures: pip install -e ".[plot]"

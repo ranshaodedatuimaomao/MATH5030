@@ -1,239 +1,48 @@
-"""Console entry point for running the core CFFT-BSDE algorithm (course tooling)."""
+"""Command-line interface for the BSDE-CFFT stochastic-volatility package."""
 
 from __future__ import annotations
 
 import argparse
-import math
-import sys
 from collections.abc import Sequence
-from pathlib import Path
 
-from bsde_cfft_sv.benchmark_driver import BenchmarkConfig
-from bsde_cfft_sv.benchmark_driver import MarketParams
-from bsde_cfft_sv.benchmark_driver import parse_csv_floats
-from bsde_cfft_sv.benchmark_driver import parse_csv_ints
-from bsde_cfft_sv.benchmark_driver import parse_methods
-from bsde_cfft_sv.benchmark_driver import run_benchmark_comparison
-from bsde_cfft_sv.implementation_version_0.cfft.core_algorithm import CoreConfig, CoreInputs, solve_core
+from ._experiments import run_experiments
 
 
-def _run_benchmark_comparison(args: argparse.Namespace) -> None:
-    """Run switchable benchmark comparison and write CSV."""
-
-    benchmark_config = BenchmarkConfig(
-        methods=parse_methods(args.benchmark_methods),
-        n_values=parse_csv_ints(args.benchmark_n_values),
-        l_values=parse_csv_floats(args.benchmark_l_values),
-        grid_values=parse_csv_ints(args.benchmark_grid_values),
-        damping_alpha=args.alpha,
-        benchmark_model=args.benchmark_model,
-        enforce_positivity=args.enforce_positivity,
-        output_path=args.benchmark_output,
-        full_surface=args.benchmark_full_surface,
-        surface_spot_min=args.surface_spot_min,
-        surface_spot_max=args.surface_spot_max,
-        surface_spot_points=args.surface_spot_points,
-    )
-    market = MarketParams(
-        spot=args.spot,
-        strike=args.strike,
-        rate=args.rate,
-        sigma=args.sigma,
-        maturity=args.maturity,
-    )
-    out_path = run_benchmark_comparison(benchmark_config, market)
-    print(f"Benchmark comparison complete: {out_path}")
-
-
-def _run_core(args: argparse.Namespace) -> None:
-    """Run one core-algorithm solve with simple Black-Scholes-style inputs."""
-
-    sigma_val = args.sigma
-    rate = args.rate
-    strike = args.strike
-    spot = args.spot
-
-    config = CoreConfig(
-        maturity=args.maturity,
-        n_time_steps=args.n_time_steps,
-        truncation_length=args.truncation_length,
-        n_space_points=args.n_space_points,
-        damping_alpha=args.alpha,
-    )
-    inputs = CoreInputs(
-        eta=lambda _t, _x: rate - 0.5 * sigma_val * sigma_val,
-        sigma=lambda _t, _x: sigma_val,
-        driver=lambda _t, _x, y, _z: -rate * y,
-        terminal_condition=lambda x: max(math.exp(x) - strike, 0.0),
-    )
-    solution = solve_core(
-        config=config,
-        inputs=inputs,
-        x_center=math.log(spot),
-        enforce_positivity=args.enforce_positivity,
-        method=args.method,
-    )
-    x0 = math.log(spot)
-    idx = min(range(len(solution.x)), key=lambda i: abs(solution.x[i] - x0))
-    y0 = solution.y[0][idx]
-    z0 = solution.z[0][idx]
-    print("Core solve complete")
-    print(f"grid point x[{idx}]={solution.x[idx]:.6f}")
-    print(f"Y(0, x0) ~= {y0:.6f}")
-    print(f"Z(0, x0) ~= {z0:.6f}")
+PART_CHOICES = ("all", "black-scholes", "heston", "garch", "sensitivity")
 
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="bsde-cfft-sv",
-        description="Run the core CFFT-BSDE algorithm (implementation_version_0).",
+        description="Run the BSDE-CFFT stochastic-volatility experiments.",
     )
-    parser.add_argument(
-        "--menu",
-        action="store_true",
-        help="Show interactive menu (open report / run replication / core demo). "
-        "Same menu runs when you launch with no arguments in a terminal.",
-    )
-
-    parser.add_argument("--spot", type=float, default=100.0, help="Initial spot level")
-    parser.add_argument("--strike", type=float, default=100.0, help="Option strike")
-    parser.add_argument("--rate", type=float, default=0.01, help="Risk-free rate")
-    parser.add_argument("--sigma", type=float, default=0.2, help="Volatility")
-    parser.add_argument("--maturity", type=float, default=1.0, help="Maturity T")
-    parser.add_argument("--n-time-steps", type=int, default=64, help="Number of time steps")
-    parser.add_argument("--n-space-points", type=int, default=128, help="Number of spatial points")
-    parser.add_argument("--truncation-length", type=float, default=12.0, help="Spatial truncation length")
-    parser.add_argument("--alpha", type=float, default=-1.5, help="Damping alpha (<0)")
-    parser.add_argument(
-        "--method",
-        choices=["new_boundary_control", "legacy_hyndman_2017"],
-        default="new_boundary_control",
-        help="Numerical method variant: new_boundary_control (boundary error control) or legacy_hyndman_2017 (2017 convolution scheme)",
-    )
-    parser.add_argument(
-        "--enforce-positivity",
-        action="store_true",
-        help="Apply max(Y,0) clamp in each backward step",
-    )
-    rep_mode = parser.add_mutually_exclusive_group()
-    rep_mode.add_argument(
-        "--benchmark-compare",
-        action="store_true",
-        help="Run a single custom benchmark comparison (see benchmark-* flags) and write CSV",
-    )
-    rep_mode.add_argument(
-        "--run-replication",
-        action="store_true",
-        help=(
-            "Rerun the full bundled replication: results/numerical_results_quick.csv, "
-            "results/numerical_results_surface_quick.csv, then paper-style PNGs (unless --skip-figures)"
-        ),
-    )
-    rep_mode.add_argument(
-        "--open-replication-report",
-        action="store_true",
-        help="Open results/replication_report.html in the default browser and exit (no solve)",
-    )
-    parser.add_argument(
-        "--replication-report",
-        type=Path,
-        default=None,
-        metavar="PATH",
-        help="Explicit path to replication_report.html (optional; used with --open-replication-report)",
-    )
-    parser.add_argument(
-        "--skip-figures",
-        action="store_true",
-        help="Only with --run-replication: regenerate CSVs only, skip matplotlib figures",
-    )
-    parser.add_argument(
-        "--benchmark-methods",
-        type=str,
-        default="new_boundary_control,legacy_hyndman_2017",
-        help="Comma-separated methods to compare",
-    )
-    parser.add_argument(
-        "--benchmark-model",
-        choices=["black_scholes_call", "intrinsic_call"],
-        default="black_scholes_call",
-        help="Reference benchmark model used for error metrics",
-    )
-    parser.add_argument(
-        "--benchmark-n-values",
-        type=str,
-        default="256,512",
-        help="Comma-separated n_time_steps values for benchmark mode",
-    )
-    parser.add_argument(
-        "--benchmark-l-values",
-        type=str,
-        default="10,12,14",
-        help="Comma-separated truncation lengths for benchmark mode",
-    )
-    parser.add_argument(
-        "--benchmark-grid-values",
-        type=str,
-        default="256,512",
-        help="Comma-separated n_space_points values for benchmark mode",
-    )
-    parser.add_argument(
-        "--benchmark-output",
-        type=str,
-        default="results/benchmark_comparison.csv",
-        help="Output CSV path for benchmark mode",
-    )
-    parser.add_argument(
-        "--benchmark-full-surface",
-        action="store_true",
-        help="Evaluate benchmark metrics on a full spot surface instead of only at spot",
-    )
-    parser.add_argument("--surface-spot-min", type=float, default=60.0, help="Minimum spot for full-surface benchmark")
-    parser.add_argument("--surface-spot-max", type=float, default=140.0, help="Maximum spot for full-surface benchmark")
-    parser.add_argument("--surface-spot-points", type=int, default=81, help="Number of spot points for full surface")
+    parser.add_argument("--part", choices=PART_CHOICES, default="all", help="Experiment section to run.")
+    parser.add_argument("--run-1d", action="store_true", help="Run 1D Black-Scholes validation.")
+    parser.add_argument("--run-heston", action="store_true", help="Run 2D Heston benchmark.")
+    parser.add_argument("--run-garch", action="store_true", help="Run 2D GARCH diffusion benchmark.")
+    parser.add_argument("--run-sensitivity", action="store_true", help="Run grid/damping sensitivity diagnostics.")
     return parser
 
 
+def _selected_part(args: argparse.Namespace) -> str:
+    flags = [
+        ("black-scholes", args.run_1d),
+        ("heston", args.run_heston),
+        ("garch", args.run_garch),
+        ("sensitivity", args.run_sensitivity),
+    ]
+    selected = [part for part, enabled in flags if enabled]
+    if len(selected) > 1:
+        raise SystemExit("Choose only one run flag, or use --part all.")
+    if selected:
+        return selected[0]
+    return args.part
+
+
 def main(argv: Sequence[str] | None = None) -> None:
-    argv_list = list(sys.argv[1:] if argv is None else argv)
-
-    if len(argv_list) == 0 and sys.stdin.isatty():
-        from bsde_cfft_sv.interactive_menu import run_replication_menu
-
-        raise SystemExit(run_replication_menu())
-
     parser = _build_parser()
     args = parser.parse_args(argv)
-
-    if args.menu:
-        if argv_list != ["--menu"]:
-            parser.error("--menu must be the only argument (in a terminal, run with no arguments for the same menu)")
-        if args.benchmark_compare or args.run_replication or args.open_replication_report:
-            parser.error("--menu cannot be combined with --benchmark-compare, --run-replication, or --open-replication-report")
-        if args.skip_figures:
-            parser.error("--menu cannot be combined with --skip-figures")
-        from bsde_cfft_sv.interactive_menu import run_replication_menu
-
-        raise SystemExit(run_replication_menu())
-
-    if args.skip_figures and not args.run_replication:
-        parser.error("--skip-figures is only valid together with --run-replication")
-
-    if args.open_replication_report:
-        from bsde_cfft_sv.replication_report import open_replication_report_html
-
-        raise SystemExit(open_replication_report_html(args.replication_report))
-
-    if args.run_replication:
-        from bsde_cfft_sv.replication_pipeline import run_full_replication
-
-        run_full_replication(extra_tail=[], skip_figures=args.skip_figures)
-        return
-
-    args.benchmark_output = Path(args.benchmark_output)
-    if args.benchmark_compare:
-        _run_benchmark_comparison(args)
-    else:
-        _run_core(args)
+    run_experiments(_selected_part(args))
 
 
 if __name__ == "__main__":

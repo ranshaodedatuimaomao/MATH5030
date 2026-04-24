@@ -1,5 +1,4 @@
-from bsde_cfft_app.cli import main
-
+from .cli import main
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,4 @@
-"""Locate and open ``results/replication_report.html`` in the default browser."""
+"""Locate and open the bundled ``replication_report.html`` in the default browser."""
 
 from __future__ import annotations
 
@@ -7,11 +7,16 @@ import webbrowser
 from collections.abc import Sequence
 from pathlib import Path
 
+from bsde_cfft_app.paths import RESULTS_DIR
+
 
 def _candidate_paths() -> list[Path]:
     """Ordered search locations for the static replication summary HTML."""
 
-    out: list[Path] = [Path.cwd() / "results" / "replication_report.html"]
+    out: list[Path] = [
+        RESULTS_DIR / "replication_report.html",
+        Path.cwd() / "results" / "replication_report.html",
+    ]
 
     here = Path(__file__).resolve()
     p = here.parent
@@ -57,7 +62,14 @@ def open_replication_report_html(
     path = resolve_replication_report_path(explicit)
     if path is None and extra_search_roots:
         for root in extra_search_roots:
-            path = resolve_replication_report_path(root / "results" / "replication_report.html")
+            for sub in (
+                root / "src" / "implementation_version_0" / "results",
+                root / "src" / "bsde_cfft_sv" / "implementation_version_0" / "results",
+                root / "results",
+            ):
+                path = resolve_replication_report_path(sub / "replication_report.html")
+                if path is not None:
+                    break
             if path is not None:
                 break
     if path is None:
@@ -66,8 +78,9 @@ def open_replication_report_html(
     if path is None:
         print(
             "Could not find replication_report.html. "
-            "Expected something like results/replication_report.html under the repo root "
-            "(run from the project directory, or pass --replication-report PATH).",
+            "Expected src/implementation_version_0/results/replication_report.html, "
+            "or legacy results/replication_report.html "
+            "(or pass --replication-report PATH).",
             file=sys.stderr,
         )
         return 1
