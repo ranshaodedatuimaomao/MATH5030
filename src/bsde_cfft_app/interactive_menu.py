@@ -1,4 +1,4 @@
-"""Shared terminal menu: v0 report, CFFT core, or notebook demo."""
+"""Shared terminal menu: bsde_cfft_sv experiments, demo notebook, v0 core, v0 report."""
 
 from __future__ import annotations
 
@@ -44,13 +44,25 @@ def _print_bsm_benchmark_line() -> None:
         print("  (Could not read BSM reference line from numerical_results_quick.csv.)\n")
 
 
+def _run_bsde_cfft_sv() -> None:
+    """Run the packaged ``bsde_cfft_sv`` reference experiment driver (all sections by default)."""
+
+    print(
+        "Running ``bsde_cfft_sv`` reference experiments (same as ``python -m bsde_cfft_sv``; "
+        "default ``--part all``: Black–Scholes, Heston, GARCH, sensitivity tables).\n"
+    )
+    from bsde_cfft_sv.cli import main as sv_cli_main
+
+    sv_cli_main([])
+
+
 def _run_v0_cfft_core() -> None:
     """Run the working solver under ``implementation_version_0`` (course bundle)."""
 
     print(
         "Running the bundled CFFT–BSDE core in ``implementation_version_0.cfft``.\n"
-        "Note: the `bsde_cfft_sv` public API (``BSDECFFT1D`` / ``price_black_scholes_1d``) is the "
-        "upstream-style surface; the v0 `solve_core` engine lives in ``implementation_version_0``.\n"
+        "Note: ``bsde_cfft_sv`` (menu option 1) is the upstream-style experiment CLI; "
+        "this option runs the v0 ``solve_core`` engine in ``implementation_version_0``.\n"
     )
     from bsde_cfft_app import cli as cli_mod
 
@@ -112,7 +124,7 @@ def run_replication_menu(
     extra_report_roots: Sequence[Path] | None = None,
     replication_extra_tail: Sequence[str] | None = None,
 ) -> int:
-    """Prompt for v0 report, CFFT core, or notebook demo. Returns a process exit code."""
+    """Prompt for bsde_cfft_sv runs, demo, v0 core, or v0 HTML report. Returns a process exit code."""
 
     _ = replication_extra_tail
     roots = tuple(extra_report_roots) if extra_report_roots else ()
@@ -123,23 +135,27 @@ def run_replication_menu(
         "The “first implementation” is v0 (``implementation_version_0``) tied to the course core.\n"
     )
     _print_bsm_benchmark_line()
-    print("  1) First implementation (v0) — open the replication / summary HTML in your browser")
-    print("  2) Run the bundled CFFT–BSDE core (``implementation_version_0.cfft``; `bsde_cfft_sv` is the public API package)")
-    print("  3) Run the ``notebooks/demo.ipynb`` demo (Jupyter, or your default .ipynb app)")
+    print("  1) Run ``bsde_cfft_sv`` reference experiments (``python -m bsde_cfft_sv``; default: all sections)")
+    print("  2) Run the ``notebooks/demo.ipynb`` demo (Jupyter, or your default .ipynb app)")
+    print("  3) Run the bundled CFFT–BSDE core (``implementation_version_0.cfft`` / v0 ``solve_core``)")
+    print("  4) Open the implementation v0 replication / summary HTML in your browser")
     print("  q) Quit\n")
 
     while True:
-        choice = input("Enter 1, 2, 3, or q: ").strip().lower()
+        choice = input("Enter 1, 2, 3, 4, or q: ").strip().lower()
         if choice in ("q", "quit", ""):
             print("Exiting.")
             return 0
         if choice == "1":
+            _run_bsde_cfft_sv()
+            return 0
+        if choice == "2":
+            return _launch_notebook_demo()
+        if choice == "3":
+            _run_v0_cfft_core()
+            return 0
+        if choice == "4":
             from bsde_cfft_app.replication_report import open_replication_report_html
 
             return open_replication_report_html(None, extra_search_roots=roots)
-        if choice == "2":
-            _run_v0_cfft_core()
-            return 0
-        if choice == "3":
-            return _launch_notebook_demo()
         print("Invalid choice; try again.\n")

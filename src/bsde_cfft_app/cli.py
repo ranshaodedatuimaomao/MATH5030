@@ -92,7 +92,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--menu",
         action="store_true",
-        help="Show interactive menu (v0 HTML report / CFFT core / notebook demo). "
+        help="Show interactive menu (bsde_cfft_sv experiments / demo notebook / v0 core / v0 HTML report). "
         "Same menu runs when you launch with no arguments in a terminal.",
     )
 
