@@ -1,4 +1,4 @@
-"""Console entry point for running the core CFFT-BSDE algorithm."""
+"""Console entry point for running the core CFFT-BSDE algorithm (course tooling)."""
 
 from __future__ import annotations
 
@@ -8,13 +8,13 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from cfft_bsde.benchmark_driver import BenchmarkConfig
-from cfft_bsde.benchmark_driver import MarketParams
-from cfft_bsde.benchmark_driver import parse_csv_floats
-from cfft_bsde.benchmark_driver import parse_csv_ints
-from cfft_bsde.benchmark_driver import parse_methods
-from cfft_bsde.benchmark_driver import run_benchmark_comparison
-from cfft_bsde.cfft.core_algorithm import CoreConfig, CoreInputs, solve_core
+from bsde_cfft_sv.benchmark_driver import BenchmarkConfig
+from bsde_cfft_sv.benchmark_driver import MarketParams
+from bsde_cfft_sv.benchmark_driver import parse_csv_floats
+from bsde_cfft_sv.benchmark_driver import parse_csv_ints
+from bsde_cfft_sv.benchmark_driver import parse_methods
+from bsde_cfft_sv.benchmark_driver import run_benchmark_comparison
+from bsde_cfft_sv.implementation_version_0.cfft.core_algorithm import CoreConfig, CoreInputs, solve_core
 
 
 def _run_benchmark_comparison(args: argparse.Namespace) -> None:
@@ -85,8 +85,8 @@ def _run_core(args: argparse.Namespace) -> None:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="cfft-bsde",
-        description="Run the core CFFT-BSDE algorithm.",
+        prog="bsde-cfft-sv",
+        description="Run the core CFFT-BSDE algorithm (implementation_version_0).",
     )
     parser.add_argument(
         "--menu",
@@ -197,7 +197,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     argv_list = list(sys.argv[1:] if argv is None else argv)
 
     if len(argv_list) == 0 and sys.stdin.isatty():
-        from cfft_bsde.interactive_menu import run_replication_menu
+        from bsde_cfft_sv.interactive_menu import run_replication_menu
 
         raise SystemExit(run_replication_menu())
 
@@ -211,7 +211,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             parser.error("--menu cannot be combined with --benchmark-compare, --run-replication, or --open-replication-report")
         if args.skip_figures:
             parser.error("--menu cannot be combined with --skip-figures")
-        from cfft_bsde.interactive_menu import run_replication_menu
+        from bsde_cfft_sv.interactive_menu import run_replication_menu
 
         raise SystemExit(run_replication_menu())
 
@@ -219,12 +219,12 @@ def main(argv: Sequence[str] | None = None) -> None:
         parser.error("--skip-figures is only valid together with --run-replication")
 
     if args.open_replication_report:
-        from cfft_bsde.replication_report import open_replication_report_html
+        from bsde_cfft_sv.replication_report import open_replication_report_html
 
         raise SystemExit(open_replication_report_html(args.replication_report))
 
     if args.run_replication:
-        from cfft_bsde.replication_pipeline import run_full_replication
+        from bsde_cfft_sv.replication_pipeline import run_full_replication
 
         run_full_replication(extra_tail=[], skip_figures=args.skip_figures)
         return

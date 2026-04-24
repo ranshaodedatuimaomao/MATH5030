@@ -1,2 +1,3 @@
-# This app uses only Python standard library modules.
-# No external packages are required.
+# Editable install (library + console): pip install -e .
+# Tests: pip install -e ".[test]"
+# Plots / replication figures: pip install -e ".[plot]"

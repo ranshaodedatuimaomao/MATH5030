@@ -9,10 +9,10 @@ from pathlib import Path
 from typing import Callable
 from typing import Literal
 
-from cfft_bsde.cfft.core_algorithm import CoreConfig
-from cfft_bsde.cfft.core_algorithm import CoreInputs
-from cfft_bsde.cfft.core_algorithm import MethodName
-from cfft_bsde.cfft.core_algorithm import solve_core
+from bsde_cfft_sv.implementation_version_0.cfft.core_algorithm import CoreConfig
+from bsde_cfft_sv.implementation_version_0.cfft.core_algorithm import CoreInputs
+from bsde_cfft_sv.implementation_version_0.cfft.core_algorithm import MethodName
+from bsde_cfft_sv.implementation_version_0.cfft.core_algorithm import solve_core
 
 
 BenchmarkModelName = Literal["black_scholes_call", "intrinsic_call"]
