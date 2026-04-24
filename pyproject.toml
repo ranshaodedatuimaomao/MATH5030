@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "UNLICENSED" }
 authors = [{ name = "qingp" }]
-dependencies = ["numpy"]
+dependencies = ["numpy",  "scipy", "pandas"]
 
 [project.optional-dependencies]
 test = ["pytest>=8.0"]
