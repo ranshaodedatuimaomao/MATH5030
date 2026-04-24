@@ -15,6 +15,7 @@ dependencies = []
 [project.optional-dependencies]
 test = ["pytest>=8.0"]
 plot = ["matplotlib>=3.8"]
+numpy = ["numpy>=1.20.0"]
 
 # No [project.scripts] — course repo has no console app (upstream uses bsde_cfft_sv.cli:main).
 
