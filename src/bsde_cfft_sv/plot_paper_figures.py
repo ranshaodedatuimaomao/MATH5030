@@ -74,7 +74,7 @@ def _plot_delta_surface(
     import matplotlib.pyplot as plt
     import numpy as np
 
-    from cfft_bsde.cfft.core_algorithm import CoreConfig, CoreInputs, solve_core
+    from bsde_cfft_sv.implementation_version_0.cfft.core_algorithm import CoreConfig, CoreInputs, solve_core
 
     config = CoreConfig(
         maturity=maturity,
@@ -132,7 +132,7 @@ def _plot_delta_surface(
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="python -m cfft_bsde.plot_paper_figures",
+        prog="python -m bsde_cfft_sv.plot_paper_figures",
         description="Generate paper-style PNG figures into results/.",
     )
     parser.add_argument(

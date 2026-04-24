@@ -8,7 +8,7 @@ from pathlib import Path
 
 def run_replication_menu(
     *,
-    title: str = "cfft-bsde",
+    title: str = "bsde-cfft-sv",
     extra_report_roots: Sequence[Path] | None = None,
     replication_extra_tail: Sequence[str] | None = None,
 ) -> int:
@@ -29,17 +29,17 @@ def run_replication_menu(
             print("Exiting.")
             return 0
         if choice == "1":
-            from cfft_bsde.replication_report import open_replication_report_html
+            from bsde_cfft_sv.replication_report import open_replication_report_html
 
             return open_replication_report_html(None, extra_search_roots=roots)
         if choice == "2":
             skip = input("Skip matplotlib figures (CSVs only)? [y/N]: ").strip().lower()
-            from cfft_bsde.replication_pipeline import run_full_replication
+            from bsde_cfft_sv.replication_pipeline import run_full_replication
 
             run_full_replication(extra_tail=rep_tail, skip_figures=skip in ("y", "yes"))
             return 0
         if choice == "3":
-            from cfft_bsde import cli as cli_mod
+            from bsde_cfft_sv import cli as cli_mod
 
             demo_args = cli_mod._build_parser().parse_args([])
             cli_mod._run_core(demo_args)

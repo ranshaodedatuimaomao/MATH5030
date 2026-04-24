@@ -1,7 +1,7 @@
 """
 Standalone launcher:
 1) installs this package from the local repo
-2) runs a preset or the same interactive menu as ``cfft-bsde`` (when appropriate)
+2) runs a preset or the same interactive menu as ``bsde-cfft-sv`` (when appropriate)
 
 Default ``--mode auto`` (interactive terminal): same menu as the console app
 (open HTML report / run replication / core demo). Use ``--mode menu`` to force
@@ -26,7 +26,7 @@ def install_local_package(repo_root: Path) -> None:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="run_standalone.py",
-        description="Install local package and run cfft-bsde presets.",
+        description="Install local package and run bsde-cfft-sv presets.",
     )
     parser.add_argument(
         "--mode",
@@ -41,7 +41,7 @@ def _build_parser() -> argparse.ArgumentParser:
         ],
         default="auto",
         help=(
-            "auto: in a terminal, same interactive menu as cfft-bsde with no args; "
+            "auto: in a terminal, same interactive menu as bsde-cfft-sv with no args; "
             "else preset core. "
             "menu: always show that menu. "
             "Other modes: core solve, benchmark CSV presets, full replication, or open HTML report."
@@ -79,8 +79,8 @@ def _preset_args(mode: str) -> list[str]:
             "--truncation-length",
             "12.0",
         ]
-    from cfft_bsde.replication_pipeline import replication_point_argv
-    from cfft_bsde.replication_pipeline import replication_surface_argv
+    from bsde_cfft_sv.replication_pipeline import replication_point_argv
+    from bsde_cfft_sv.replication_pipeline import replication_surface_argv
 
     if mode == "benchmark-point":
         return replication_point_argv()
@@ -107,7 +107,7 @@ def main(argv: list[str] | None = None) -> None:
             )
             raise SystemExit(2)
         if args.mode == "menu" or (args.mode == "auto" and sys.stdin.isatty()):
-            from cfft_bsde.interactive_menu import run_replication_menu
+            from bsde_cfft_sv.interactive_menu import run_replication_menu
 
             raise SystemExit(
                 run_replication_menu(
@@ -115,13 +115,13 @@ def main(argv: list[str] | None = None) -> None:
                     extra_report_roots=(repo_root,),
                 )
             )
-        from cfft_bsde.cli import main as cli_main
+        from bsde_cfft_sv.cli import main as cli_main
 
         cli_main(_preset_args("core"))
         return
 
     if args.mode == "replication":
-        from cfft_bsde.replication_pipeline import run_full_replication
+        from bsde_cfft_sv.replication_pipeline import run_full_replication
 
         run_full_replication(
             extra_tail=list(args.extra_cli_args) + list(passthrough),
@@ -130,7 +130,7 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     if args.mode == "open-report":
-        from cfft_bsde.replication_report import open_replication_report_html
+        from bsde_cfft_sv.replication_report import open_replication_report_html
 
         code = open_replication_report_html(
             args.replication_report,
@@ -138,7 +138,7 @@ def main(argv: list[str] | None = None) -> None:
         )
         raise SystemExit(code)
 
-    from cfft_bsde.cli import main as cli_main
+    from bsde_cfft_sv.cli import main as cli_main
 
     cli_main(_preset_args(args.mode) + args.extra_cli_args + passthrough)
 

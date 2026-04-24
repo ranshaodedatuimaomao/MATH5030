@@ -24,7 +24,7 @@ def _shared_black_scholes_call_argv() -> list[str]:
 
 
 def replication_point_argv() -> list[str]:
-    """Argv list for ``cfft_bsde.cli.main`` — point benchmark matching committed ``numerical_results_quick.csv``."""
+    """Argv list for ``bsde_cfft_sv.cli.main`` — point benchmark matching committed ``numerical_results_quick.csv``."""
 
     return [
         "--benchmark-compare",
@@ -43,7 +43,7 @@ def replication_point_argv() -> list[str]:
 
 
 def replication_surface_argv() -> list[str]:
-    """Argv list for ``cfft_bsde.cli.main`` — surface benchmark matching ``numerical_results_surface_quick.csv``."""
+    """Argv list for ``bsde_cfft_sv.cli.main`` — surface benchmark matching ``numerical_results_surface_quick.csv``."""
 
     return [
         "--benchmark-compare",
@@ -75,7 +75,7 @@ def run_full_replication(
 ) -> None:
     """Run point CSV, surface CSV, then ``plot_paper_figures`` (unless ``skip_figures``)."""
 
-    from cfft_bsde.cli import main as cli_main
+    from bsde_cfft_sv.cli import main as cli_main
 
     tail = list(extra_tail)
 
@@ -87,7 +87,7 @@ def run_full_replication(
 
     if skip_figures:
         print("[replication] Step 3/3: skipped (--skip-figures).")
-        print("  Install matplotlib and run: python -m cfft_bsde.plot_paper_figures")
+        print("  Install matplotlib and run: python -m bsde_cfft_sv.plot_paper_figures")
         _print_replication_done_footer()
         return
 
@@ -98,14 +98,14 @@ def run_full_replication(
         print(
             "[replication] matplotlib not installed; skipping figures.\n"
             "  Run: python -m pip install matplotlib\n"
-            "  Then: python -m cfft_bsde.plot_paper_figures "
+            "  Then: python -m bsde_cfft_sv.plot_paper_figures "
             "--surface-csv results/numerical_results_surface_quick.csv --output-dir results",
             file=sys.stderr,
         )
         _print_replication_done_footer()
         return
 
-    from cfft_bsde.plot_paper_figures import main as plot_main
+    from bsde_cfft_sv.plot_paper_figures import main as plot_main
 
     plot_main(
         [
@@ -127,6 +127,6 @@ def _print_replication_done_footer() -> None:
         "  PNG:  results/figure_01_legacy_price_delta_errors.png\n"
         "        results/figure_02_new_boundary_price_delta_errors.png\n"
         "        results/figure_03_new_boundary_delta_surface.png\n"
-        "  HTML: results/replication_report.html (open with: cfft-bsde --open-replication-report\n"
+        "  HTML: results/replication_report.html (open with: bsde-cfft-sv --open-replication-report\n"
         "        or: python run_standalone.py --mode open-report)\n"
     )

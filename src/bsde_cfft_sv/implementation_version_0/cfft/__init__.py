@@ -1,4 +1,4 @@
-"""Convolution-FFT core algorithm exports."""
+"""Convolution-FFT core algorithm exports (implementation version 0)."""
 
 from .core_algorithm import CoreConfig, CoreInputs, CoreSolution, solve_core
 
