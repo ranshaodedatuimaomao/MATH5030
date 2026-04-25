@@ -1,7 +1,10 @@
 """
-Reference / benchmark pricers (names match upstream; not implemented in this repo).
+Reference pricers for model validation:
 
-Reference upstream: ``BSDE-CFFT-Method-For-Stochastic-Volatility-Models-main`` / ``bsde_cfft_sv._benchmarks``.
+1. Heston semi-analytic formula (characteristic function inversion via scipy)
+2. GARCH Diffusion mean-variance Black-Scholes approximation
+3. PyFeng references for Heston FFT and GARCH Barone-Adesi order-2
+4. Monte Carlo (Milstein scheme) for both models
 """
 
 from __future__ import annotations
