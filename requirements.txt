@@ -1,3 +1,9 @@
-# Editable: pip install -e .
-# Optional: pip install -e ".[test]"  or  ".[plot]"
-# When implementing, add dependencies to pyproject.toml (see reference repo).
+# Core runtime dependencies
+numpy
+scipy
+pandas
+pyfeng>=0.3
+
+# Optional developer/testing tools
+pytest>=8.0
+matplotlib>=3.8
