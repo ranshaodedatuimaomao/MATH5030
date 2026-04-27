@@ -1,4 +1,4 @@
-"""Public API for the BSDE-CFFT stochastic-volatility package (stub; see upstream for implementations)."""
+"""Public API for the BSDE-CFFT stochastic-volatility package."""
 
 from __future__ import annotations
 
